@@ -81,6 +81,10 @@ def top_bar(user):
             logout()
 
     if user:
+        from lib.notifications import render_announcements_banner  # import local para evitar ciclo de módulos
+
+        render_announcements_banner(user)
+
         render_global_search()
         from lib.assistant_widget import render_assistant_widget  # import local para evitar ciclo de módulos
 

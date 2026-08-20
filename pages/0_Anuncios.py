@@ -9,6 +9,7 @@ from lib import notifications
 
 inject_css()
 guard_page()
+notifications.mark_announcements_seen(current_user()["id"])
 top_bar(current_user())
 page_header("Anuncios", "Notas de proceso a tener en cuenta al ejecutar ciertas tareas")
 
@@ -82,14 +83,7 @@ if can_edit():
                         "uid": current_user()["id"],
                     },
                 )
-                st.success("Anuncio publicado.")
-                if notifications.is_configured():
-                    module_name = modules_df.set_index("id").loc[module_id, "name"] if module_id else None
-                    with st.spinner("Notificando por correo…"):
-                        sent = notifications.notify_new_announcement(
-                            title.strip(), PRIORITY_LABELS[priority], module_name, current_user()["name"]
-                        )
-                    st.caption(f"📧 Se notificó por correo a {sent} usuario(s).")
+                st.success("Anuncio publicado. El resto del equipo lo verá como anuncio nuevo al entrar a la app.")
                 st.rerun()
 
 st.divider()

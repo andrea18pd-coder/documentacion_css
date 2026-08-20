@@ -2,7 +2,7 @@
 
 Plataforma interna en Streamlit para consultar y mantener actualizada la documentación del área de CSS:
 
-- Anuncios: notas de proceso a tener en cuenta al ejecutar ciertas tareas, con módulo, prioridad (normal/importante/crítico) y vigencia (se pueden archivar sin perder el histórico). Si hay credenciales SMTP configuradas, cada anuncio nuevo notifica por correo a todos los usuarios activos automáticamente.
+- Anuncios: notas de proceso a tener en cuenta al ejecutar ciertas tareas, con módulo, prioridad (normal/importante/crítico) y vigencia (se pueden archivar sin perder el histórico). Cada usuario ve un aviso 🔔 en cualquier página de la app mientras tenga anuncios vigentes sin ver, con el título de cada uno; desaparece al entrar a la página Anuncios.
 - Parámetros, funciones y funcionalidades a habilitar según cada tipo de petición.
 - Consideraciones y notas posteriores a una habilitación.
 - Desarrollos personalizados.
@@ -23,7 +23,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
 
 ## Puesta en marcha (local)
 
-1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones, anuncios/notas de proceso y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql`, `sql/migration_sys_catalog.sql` y/o `sql/migration_process_notes.sql` según corresponda.
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones, anuncios/notas de proceso y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql`, `sql/migration_sys_catalog.sql`, `sql/migration_process_notes.sql` y/o `sql/migration_announcement_notifications.sql` según corresponda.
 
 2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
 
@@ -39,7 +39,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
    values ('tu_correo@empresa.com', 'Tu Nombre', '<hash pegado aquí>', 'admin', true);
    ```
 
-3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador), y/o una casilla de correo real con contraseña de aplicación en la sección `[smtp]` para que la página Anuncios notifique por correo a todos los usuarios activos cada vez que se publica un anuncio nuevo (sin esto, los anuncios se siguen publicando normalmente, solo que sin correo). No hace falta verificar ningún dominio: sirve una cuenta de Outlook/Office 365 o Gmail con una contraseña de aplicación.
+3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador).
 
 4. **Instalar dependencias y correr la app:**
 
@@ -71,7 +71,7 @@ lib/
   sys_catalog.py                # catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema), respaldo de búsqueda
   llm.py                        # cliente Gemini para que el Asistente redacte respuestas (opcional, cae a solo-buscador si no hay API key)
   assistant_widget.py           # burbuja flotante del Asistente (chat), inyectada en todas las páginas vía top_bar()
-  notifications.py              # notifica por correo (SMTP) a todos los usuarios activos cuando se publica un anuncio (opcional)
+  notifications.py              # aviso 🔔 dentro de la app cuando hay anuncios vigentes sin ver, por usuario
   api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
   0_Anuncios.py                 # notas de proceso a tener en cuenta al ejecutar ciertas tareas (módulo, prioridad, vigencia)
@@ -89,6 +89,7 @@ sql/
   migration_custom_dev_library.sql # migración para agregar la biblioteca de desarrollos y personalizaciones
   migration_sys_catalog.sql     # migración para agregar el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades)
   migration_process_notes.sql   # migración para agregar los anuncios/notas de proceso
+  migration_announcement_notifications.sql # migración para el aviso 🔔 de anuncios nuevos dentro de la app
 scripts/hash_password.py        # utilidad para generar el hash del primer admin
 assets/
   style.css                     # paleta e identidad visual inspirada en q10.com

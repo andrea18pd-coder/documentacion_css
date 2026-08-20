@@ -12,6 +12,7 @@ create table if not exists users (
     password_hash text not null,
     role text not null check (role in ('admin', 'editor', 'lector')),
     active boolean not null default true,
+    last_seen_announcements_at timestamptz,
     created_at timestamptz not null default now()
 );
 
