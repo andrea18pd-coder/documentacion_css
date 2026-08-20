@@ -1,5 +1,6 @@
 """Búsqueda global de texto libre sobre el contenido documentado."""
 
+import difflib
 import re
 import unicodedata
 
@@ -20,7 +21,7 @@ _STOPWORDS = {
     "con", "por", "para", "del", "al", "es", "son", "debe", "deben", "tener", "tengo", "necesito",
     "necesita", "quiero", "quisiera", "como", "cómo", "este", "esta", "estos", "estas", "ese", "esa",
     "esos", "esas", "eso", "esto", "se", "su", "sus", "lo", "le", "les", "sin", "sobre", "entre",
-    "hay", "ya", "mas", "más", "muy", "mi", "tu", "si", "sí", "no", "será", "sería", "hace", "hacer",
+    "hay", "ya", "mas", "más", "muy", "mi", "mis", "tu", "tus", "si", "sí", "no", "será", "sería", "hace", "hacer",
     "puedo", "podría", "cual", "cuál", "cuales", "cuáles", "donde", "dónde", "cuando", "cuándo",
     "porque", "porqué", "pero", "desde", "hasta", "hacia", "cada", "algo", "todo", "toda", "todos",
     "todas", "aqui", "aquí", "ahi", "ahí", "alli", "allí",
@@ -58,6 +59,31 @@ def _prefix_ok(keyword, text):
     prefix = keyword[:FUZZY_PREFIX_LEN]
     tokens = re.findall(r"\w+", _strip_accents(text.lower()))
     return any(len(t) >= FUZZY_MIN_KEYWORD_LEN and t[:FUZZY_PREFIX_LEN] == prefix for t in tokens)
+
+
+def _name_match_count(name, keywords):
+    """Cuántas keywords de la pregunta coinciden con `name`, ya sea por substring exacto o
+    por similitud (mismo criterio de prefijo + trigramas que el resto del buscador). Sin la
+    parte de similitud, una funcionalidad encontrada solo por tolerancia a tipeo (p. ej.
+    "matricla" -> "matrícula") contaría como CERO coincidencias, cuando en realidad sí es un
+    match real."""
+    target = _strip_accents((name or "").lower())
+    tokens = target.split()
+    count = 0
+    for kw in keywords:
+        if kw in target:
+            count += 1
+            continue
+        if len(kw) < FUZZY_MIN_KEYWORD_LEN:
+            continue
+        prefix = kw[:FUZZY_PREFIX_LEN]
+        for tok in tokens:
+            if len(tok) < FUZZY_MIN_KEYWORD_LEN or tok[:FUZZY_PREFIX_LEN] != prefix:
+                continue
+            if difflib.SequenceMatcher(None, kw, tok).ratio() >= 0.6:
+                count += 1
+                break
+    return count
 
 
 def _ilike_params_and_clause(name_cols, body_cols, raw_query, keywords, q_param="q"):
@@ -168,7 +194,16 @@ def search_all(query):
     fuzzy_ids = _fuzzy_match_ids("functionalities", ["name"], keywords)
     combined = _with_fuzzy_extras("functionalities", "id, name", func_df, fuzzy_ids, RESULT_LIMIT_PER_TABLE)
     for r in combined.itertuples():
-        results.append({"type": "functionality", "id": int(r.id), "label": r.name, "subtitle": "Funcionalidad"})
+        results.append({
+            "type": "functionality",
+            "id": int(r.id),
+            "label": r.name,
+            "subtitle": "Funcionalidad",
+            # Cuántas keywords de la pregunta coinciden con el nombre — el Asistente lo usa
+            # para decidir si esta funcionalidad es lo bastante confiable como para mostrarla
+            # como LA respuesta (con su receta de códigos), en vez de solo una sugerencia más.
+            "match_count": _name_match_count(r.name, keywords),
+        })
 
     params, clause, order_expr = _ilike_params_and_clause(["name", "client"], ["description", "notes"], raw, keywords)
     cd_df = fetch_df(

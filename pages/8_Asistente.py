@@ -2,7 +2,7 @@ import streamlit as st
 
 from lib.auth import guard_page, current_user
 from lib.ui import inject_css, page_header, top_bar, PAGE_BY_RESULT_TYPE, JUMP_KEY_BY_RESULT_TYPE, RESULT_TYPE_LABELS, RESULT_TYPE_ORDER
-from lib.search import search_all, fetch_result_detail
+from lib.search import search_all, fetch_result_detail, _extract_keywords
 from lib.db import fetch_df
 from lib.activation_items import load_all_items, load_meta_query_ids, build_recipe, best_matches, KIND_LABELS
 from lib import sys_catalog
@@ -252,8 +252,19 @@ if question and question.strip():
 
     detail = None
     recipe = None
-    if grouped.get("functionality"):
-        top_functionality_id = grouped["functionality"][0]["id"]
+    top_functionality = (grouped.get("functionality") or [None])[0]
+    if top_functionality:
+        # No basta con que search_all() haya encontrado ALGUNA funcionalidad: si la
+        # pregunta trae varias palabras clave distintivas y esta funcionalidad solo coincide
+        # por una de ellas (a veces la más genérica, p. ej. "estudiantes"), mostrarla como LA
+        # respuesta confirmada —con receta y todo— sería engañoso. Solo la promovemos si
+        # coincide con al menos 2 palabras clave, o con la única que había si solo hay una.
+        n_keywords = len(_extract_keywords(q))
+        confident = top_functionality.get("match_count", 0) >= min(2, n_keywords)
+    else:
+        confident = False
+    if top_functionality and confident:
+        top_functionality_id = top_functionality["id"]
         detail = _fetch_functionality_detail(top_functionality_id)
         if detail:
             recipe = build_recipe(items, top_functionality_id) or {
