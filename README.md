@@ -2,6 +2,7 @@
 
 Plataforma interna en Streamlit para consultar y mantener actualizada la documentación del área de CSS:
 
+- Anuncios: notas de proceso a tener en cuenta al ejecutar ciertas tareas, con módulo, prioridad (normal/importante/crítico) y vigencia (se pueden archivar sin perder el histórico).
 - Parámetros, funciones y funcionalidades a habilitar según cada tipo de petición.
 - Consideraciones y notas posteriores a una habilitación.
 - Desarrollos personalizados.
@@ -22,7 +23,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
 
 ## Puesta en marcha (local)
 
-1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql` y/o `sql/migration_sys_catalog.sql` según corresponda.
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones, anuncios/notas de proceso y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql`, `sql/migration_sys_catalog.sql` y/o `sql/migration_process_notes.sql` según corresponda.
 
 2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
 
@@ -72,6 +73,7 @@ lib/
   assistant_widget.py           # burbuja flotante del Asistente (chat), inyectada en todas las páginas vía top_bar()
   api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
+  0_Anuncios.py                 # notas de proceso a tener en cuenta al ejecutar ciertas tareas (módulo, prioridad, vigencia)
   1_Funcionalidades.py
   2_Desarrollos_Personalizados.py # seguimiento de solicitudes de desarrollo por cliente
   3_Dimensiones.py
@@ -85,6 +87,7 @@ sql/
   migration_queries.sql         # migración para agregar el catálogo de queries a una BD existente
   migration_custom_dev_library.sql # migración para agregar la biblioteca de desarrollos y personalizaciones
   migration_sys_catalog.sql     # migración para agregar el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades)
+  migration_process_notes.sql   # migración para agregar los anuncios/notas de proceso
 scripts/hash_password.py        # utilidad para generar el hash del primer admin
 assets/
   style.css                     # paleta e identidad visual inspirada en q10.com

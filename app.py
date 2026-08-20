@@ -15,6 +15,7 @@ if not is_logged_in():
     st.stop()
 
 pages = [
+    st.Page("pages/0_Anuncios.py", title="Anuncios", icon="📢"),
     st.Page("pages/1_Funcionalidades.py", title="Funcionalidades", icon="📋"),
     st.Page("pages/2_Desarrollos_Personalizados.py", title="Desarrollos personalizados", icon="🛠️"),
     st.Page("pages/3_Dimensiones.py", title="Dimensiones", icon="📐"),
