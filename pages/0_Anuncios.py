@@ -1,9 +1,11 @@
+import pandas as pd
 import streamlit as st
 
 from lib.auth import guard_page, can_edit, current_user
 from lib.ui import inject_css, page_header, top_bar, select_with_id, confirm_delete_button
 from lib.db import fetch_df, execute
 from lib.catalog import list_modules, options
+from lib import notifications
 
 inject_css()
 guard_page()
@@ -81,6 +83,13 @@ if can_edit():
                     },
                 )
                 st.success("Anuncio publicado.")
+                if notifications.is_configured():
+                    module_name = modules_df.set_index("id").loc[module_id, "name"] if module_id else None
+                    with st.spinner("Notificando por correo…"):
+                        sent = notifications.notify_new_announcement(
+                            title.strip(), PRIORITY_LABELS[priority], module_name, current_user()["name"]
+                        )
+                    st.caption(f"📧 Se notificó por correo a {sent} usuario(s).")
                 st.rerun()
 
 st.divider()
@@ -91,7 +100,7 @@ else:
     for _, row in df.iterrows():
         with st.container(border=True):
             badge_bits = [f"{PRIORITY_ICONS[row['priority']]} **{PRIORITY_LABELS[row['priority']]}**"]
-            if row["module_name"]:
+            if pd.notna(row["module_name"]):
                 badge_bits.append(row["module_name"])
             if not row["active"]:
                 badge_bits.append("📦 Archivado")
