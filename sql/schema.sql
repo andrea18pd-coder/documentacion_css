@@ -1,6 +1,10 @@
 -- Esquema de base de datos para la Documentación CSS (Q10)
 -- Ejecutar completo en el SQL editor de Supabase (proyecto nuevo).
 
+-- Extensiones para el buscador global (similitud tolerante a tildes y errores de tipeo).
+create extension if not exists pg_trgm;
+create extension if not exists unaccent;
+
 create table if not exists users (
     id serial primary key,
     email text not null unique,
