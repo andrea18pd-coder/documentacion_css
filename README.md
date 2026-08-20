@@ -2,7 +2,7 @@
 
 Plataforma interna en Streamlit para consultar y mantener actualizada la documentación del área de CSS:
 
-- Anuncios: notas de proceso a tener en cuenta al ejecutar ciertas tareas, con módulo, prioridad (normal/importante/crítico) y vigencia (se pueden archivar sin perder el histórico). Si hay una API key de Resend configurada, cada anuncio nuevo notifica por correo a todos los usuarios activos automáticamente.
+- Anuncios: notas de proceso a tener en cuenta al ejecutar ciertas tareas, con módulo, prioridad (normal/importante/crítico) y vigencia (se pueden archivar sin perder el histórico). Si hay credenciales SMTP configuradas, cada anuncio nuevo notifica por correo a todos los usuarios activos automáticamente.
 - Parámetros, funciones y funcionalidades a habilitar según cada tipo de petición.
 - Consideraciones y notas posteriores a una habilitación.
 - Desarrollos personalizados.
@@ -39,7 +39,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
    values ('tu_correo@empresa.com', 'Tu Nombre', '<hash pegado aquí>', 'admin', true);
    ```
 
-3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador), y/o tu API key gratuita de [Resend](https://resend.com/api-keys) en la sección `[resend]` para que la página Anuncios notifique por correo a todos los usuarios activos cada vez que se publica un anuncio nuevo (sin esto, los anuncios se siguen publicando normalmente, solo que sin correo). Para enviar a todo el equipo (no solo a modo de prueba) hace falta verificar un dominio propio en Resend y usarlo en `from_email`.
+3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador), y/o una casilla de correo real con contraseña de aplicación en la sección `[smtp]` para que la página Anuncios notifique por correo a todos los usuarios activos cada vez que se publica un anuncio nuevo (sin esto, los anuncios se siguen publicando normalmente, solo que sin correo). No hace falta verificar ningún dominio: sirve una cuenta de Outlook/Office 365 o Gmail con una contraseña de aplicación.
 
 4. **Instalar dependencias y correr la app:**
 
@@ -71,7 +71,7 @@ lib/
   sys_catalog.py                # catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema), respaldo de búsqueda
   llm.py                        # cliente Gemini para que el Asistente redacte respuestas (opcional, cae a solo-buscador si no hay API key)
   assistant_widget.py           # burbuja flotante del Asistente (chat), inyectada en todas las páginas vía top_bar()
-  notifications.py              # notifica por correo (Resend) a todos los usuarios activos cuando se publica un anuncio (opcional)
+  notifications.py              # notifica por correo (SMTP) a todos los usuarios activos cuando se publica un anuncio (opcional)
   api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
   0_Anuncios.py                 # notas de proceso a tener en cuenta al ejecutar ciertas tareas (módulo, prioridad, vigencia)

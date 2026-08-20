@@ -1,46 +1,35 @@
-"""Notificaciones por correo (Resend) cuando se publica un anuncio nuevo.
+"""Notificaciones por correo (SMTP) cuando se publica un anuncio nuevo.
 
-Opcional: si no hay una API key de Resend configurada, se omite en silencio (igual que
+Opcional: si no hay credenciales SMTP configuradas, se omite en silencio (igual que
 `lib/llm.py` con Gemini) — la publicación del anuncio nunca debe fallar por esto.
+Envía desde una casilla real (Outlook/Office 365, Gmail, etc.) con una "contraseña de
+aplicación", sin necesidad de verificar un dominio propio.
 """
 
+import smtplib
+import ssl
 import sys
+from email.mime.text import MIMEText
 
-import requests
 import streamlit as st
 
-RESEND_API_URL = "https://api.resend.com/emails"
-_DEFAULT_FROM = "onboarding@resend.com"
+_DEFAULT_HOST = "smtp.office365.com"
+_DEFAULT_PORT = 587
 
 
 def is_configured():
-    return bool(st.secrets.get("resend", {}).get("api_key"))
-
-
-def _send(api_key, from_email, to_email, subject, html_body):
-    try:
-        response = requests.post(
-            RESEND_API_URL,
-            headers={"Authorization": f"Bearer {api_key}"},
-            json={"from": from_email, "to": [to_email], "subject": subject, "html": html_body},
-            timeout=10,
-        )
-        if response.status_code >= 300:
-            print(f"[notifications] Resend respondió {response.status_code} para {to_email}: {response.text}", file=sys.stderr)
-        return response.status_code < 300
-    except Exception as exc:
-        print(f"[notifications] error enviando a {to_email}: {exc}", file=sys.stderr)
-        return False
+    cfg = st.secrets.get("smtp", {})
+    return bool(cfg.get("email") and cfg.get("app_password"))
 
 
 def notify_new_announcement(title, priority_label, module_name, author_name):
     """Envía un correo a cada usuario activo avisando del anuncio nuevo. Devuelve cuántos
-    correos se enviaron con éxito (0 si Resend no está configurado o falla por completo)."""
-    resend_cfg = st.secrets.get("resend", {})
-    api_key = resend_cfg.get("api_key")
-    if not api_key:
+    correos se enviaron con éxito (0 si SMTP no está configurado o falla por completo)."""
+    cfg = st.secrets.get("smtp", {})
+    email_addr = cfg.get("email")
+    app_password = cfg.get("app_password")
+    if not (email_addr and app_password):
         return 0
-    from_email = resend_cfg.get("from_email", _DEFAULT_FROM)
 
     from lib.db import fetch_df  # import local para evitar ciclo de módulos
 
@@ -54,15 +43,32 @@ def notify_new_announcement(title, priority_label, module_name, author_name):
         detail_bits.append(module_name)
     detail_line = " · ".join(detail_bits)
 
+    host = cfg.get("host", _DEFAULT_HOST)
+    port = int(cfg.get("port", _DEFAULT_PORT))
+
     sent = 0
-    for _, row in users_df.iterrows():
-        html_body = (
-            f"<p>Hola {row['name']},</p>"
-            f"<p>Se publicó un nuevo anuncio en la Documentación CSS de Q10:</p>"
-            f"<p><strong>{title}</strong><br>{detail_line}</p>"
-            f"<p>Publicado por {author_name}.</p>"
-            f"<p>Ingresa a la app, sección <strong>Anuncios</strong>, para ver el detalle completo.</p>"
-        )
-        if _send(api_key, from_email, row["email"], subject, html_body):
-            sent += 1
+    try:
+        with smtplib.SMTP(host, port, timeout=10) as server:
+            server.starttls(context=ssl.create_default_context())
+            server.login(email_addr, app_password)
+            for _, row in users_df.iterrows():
+                html_body = (
+                    f"<p>Hola {row['name']},</p>"
+                    f"<p>Se publicó un nuevo anuncio en la Documentación CSS de Q10:</p>"
+                    f"<p><strong>{title}</strong><br>{detail_line}</p>"
+                    f"<p>Publicado por {author_name}.</p>"
+                    f"<p>Ingresa a la app, sección <strong>Anuncios</strong>, para ver el detalle completo.</p>"
+                )
+                msg = MIMEText(html_body, "html", "utf-8")
+                msg["Subject"] = subject
+                msg["From"] = email_addr
+                msg["To"] = row["email"]
+                try:
+                    server.sendmail(email_addr, [row["email"]], msg.as_string())
+                    sent += 1
+                except Exception as exc:
+                    print(f"[notifications] error enviando a {row['email']}: {exc}", file=sys.stderr)
+    except Exception as exc:
+        print(f"[notifications] error de conexión SMTP: {exc}", file=sys.stderr)
+
     return sent
