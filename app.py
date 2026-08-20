@@ -21,6 +21,7 @@ pages = [
     st.Page("pages/4_APIs.py", title="APIs", icon="🔌"),
     st.Page("pages/6_Queries.py", title="Queries", icon="🗄️"),
     st.Page("pages/7_Biblioteca_Desarrollos.py", title="Biblioteca de desarrollos", icon="📚"),
+    st.Page("pages/8_Asistente.py", title="Asistente", icon="🤖"),
 ]
 if is_admin():
     pages.append(st.Page("pages/5_Administracion.py", title="Administración", icon="⚙️"))

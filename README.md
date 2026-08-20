@@ -10,6 +10,7 @@ Plataforma interna en Streamlit para consultar y mantener actualizada la documen
 - Catálogo de APIs, con un mapa interactivo de dependencias entre recursos.
 - Catálogo de queries de soporte, enlazadas a las funcionalidades que habilitan.
 - Biblioteca de desarrollos reutilizables (recetas de habilitación, cambios estándar y procedimientos ante eventualidades) y catálogo de personalizaciones por institución.
+- Asistente en formato chat: responde preguntas sobre toda la documentación (qué habilitar, qué hace un query, qué trae una API, etc.) combinando el buscador interno con el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema) y, si hay una API key de Gemini configurada, redacta la respuesta con IA — si no, muestra igual los resultados encontrados sin IA.
 
 Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
 
@@ -21,7 +22,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
 
 ## Puesta en marcha (local)
 
-1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos y personalizaciones). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql` y/o `sql/migration_custom_dev_library.sql` según corresponda.
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql` y/o `sql/migration_sys_catalog.sql` según corresponda.
 
 2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
 
@@ -37,7 +38,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
    values ('tu_correo@empresa.com', 'Tu Nombre', '<hash pegado aquí>', 'admin', true);
    ```
 
-3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`).
+3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador).
 
 4. **Instalar dependencias y correr la app:**
 
@@ -65,6 +66,9 @@ lib/
   ui.py                         # estilo Q10, header, buscador global y componentes reutilizables
   catalog.py                    # catálogos compartidos: módulos, planes, tipos
   search.py                     # búsqueda global (funcionalidades, desarrollos, dimensiones, APIs, queries, biblioteca, personalizaciones)
+  activation_items.py           # extrae funciones/parámetros/funcionalidades de las notas de activación y arma la "receta" de habilitación
+  sys_catalog.py                # catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema), respaldo de búsqueda
+  llm.py                        # cliente Gemini para que el Asistente redacte respuestas (opcional, cae a solo-buscador si no hay API key)
   api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
   1_Funcionalidades.py
@@ -74,11 +78,13 @@ pages/
   5_Administracion.py           # solo admin: usuarios y catálogos
   6_Queries.py                  # catálogo de queries de soporte
   7_Biblioteca_Desarrollos.py   # biblioteca de desarrollos reutilizables (P/F/E) + personalizaciones por institución
+  8_Asistente.py                # chat sobre toda la documentación, con receta de habilitación y respuesta redactada por IA (opcional)
 sql/
   schema.sql                    # DDL completo para Supabase (instalación nueva)
   migration_api_map.sql         # migración para agregar el mapa de APIs a una BD existente
   migration_queries.sql         # migración para agregar el catálogo de queries a una BD existente
   migration_custom_dev_library.sql # migración para agregar la biblioteca de desarrollos y personalizaciones
+  migration_sys_catalog.sql     # migración para agregar el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades)
 scripts/hash_password.py        # utilidad para generar el hash del primer admin
 assets/
   style.css                     # paleta e identidad visual inspirada en q10.com
