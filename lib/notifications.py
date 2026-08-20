@@ -21,7 +21,7 @@ def get_unread_announcements(user_id):
         order by pn.created_at desc
         """,
         {"user_id": user_id},
-        ttl=0,
+        ttl=20,
     )
     return df.to_dict("records")
 
@@ -30,10 +30,15 @@ def mark_announcements_seen(user_id):
     from lib.db import execute  # import local para evitar ciclo de módulos
 
     execute("update users set last_seen_announcements_at = now() where id = :id", {"id": user_id})
+    # get_unread_announcements() tiene un caché corto (ttl=20s): sin este aviso, el banner
+    # de esta misma ejecución podría seguir mostrando el conteo de antes de marcar como visto.
+    st.session_state["_skip_announcements_banner_once"] = True
 
 
 def render_announcements_banner(user):
     """Aviso en la parte superior de cualquier página cuando hay anuncios nuevos sin ver."""
+    if st.session_state.pop("_skip_announcements_banner_once", False):
+        return
     unread = get_unread_announcements(user["id"])
     if not unread:
         return

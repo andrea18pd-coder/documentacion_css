@@ -142,7 +142,11 @@ a, a:visited {
   width: 320px;
   max-width: 78vw;
 }
-.st-key-q10-assistant-panel .stButton > button {
+
+/* Enlaces en negrita hipervinculados (Asistente y resultados del buscador global), en vez
+   de botones sólidos naranjas */
+.st-key-q10-assistant-panel .stButton > button,
+.st-key-q10-global-search-results .stButton > button {
   background: none;
   border: none;
   padding: 0.15rem 0;
@@ -154,11 +158,15 @@ a, a:visited {
   border-radius: 0;
   width: auto;
   box-shadow: none;
+  white-space: normal;
+  max-width: 100%;
 }
-.st-key-q10-assistant-panel .stButton > button:hover {
+.st-key-q10-assistant-panel .stButton > button:hover,
+.st-key-q10-global-search-results .stButton > button:hover {
   background: none;
   color: var(--q10-orange);
 }
-.st-key-q10-assistant-panel .stButton {
+.st-key-q10-assistant-panel .stButton,
+.st-key-q10-global-search-results .stButton {
   width: auto;
 }

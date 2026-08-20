@@ -95,6 +95,11 @@ def render_global_search():
     """Barra de búsqueda de texto libre sobre funcionalidades, desarrollos, dimensiones y APIs."""
     from lib.search import search_all  # import local para evitar ciclo de módulos
 
+    # No se puede tocar st.session_state["global_search_query"] después de que el widget ya
+    # se instanció en este mismo run, así que la limpieza se aplica UN PASO ANTES de crearlo.
+    if st.session_state.pop("_clear_search_query", False):
+        st.session_state["global_search_query"] = ""
+
     query = st.text_input(
         "Buscar",
         key="global_search_query",
@@ -110,7 +115,7 @@ def render_global_search():
             for r in results:
                 grouped.setdefault(r["type"], []).append(r)
 
-            with st.container(border=True):
+            with st.container(border=True, key="q10-global-search-results"):
                 types_present = [t for t in RESULT_TYPE_ORDER if t in grouped]
                 cols = st.columns(len(types_present))
                 for col, result_type in zip(cols, types_present):
@@ -123,8 +128,8 @@ def render_global_search():
                             if st.button(
                                 f"{r['label']} — {r['subtitle']}",
                                 key=f"search_result_{r['type']}_{r['id']}",
-                                use_container_width=True,
                             ):
+                                st.session_state["_clear_search_query"] = True
                                 st.session_state[JUMP_KEY_BY_RESULT_TYPE[r["type"]]] = r["id"]
                                 st.switch_page(PAGE_BY_RESULT_TYPE[r["type"]])
     st.write("")
