@@ -82,6 +82,9 @@ def top_bar(user):
 
     if user:
         render_global_search()
+        from lib.assistant_widget import render_assistant_widget  # import local para evitar ciclo de módulos
+
+        render_assistant_widget()
 
 
 def render_global_search():

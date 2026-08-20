@@ -1,7 +1,8 @@
+"""Burbuja flotante del Asistente (chat), inyectada en todas las páginas vía `top_bar()`."""
+
 import streamlit as st
 
-from lib.auth import guard_page, current_user
-from lib.ui import inject_css, page_header, top_bar, PAGE_BY_RESULT_TYPE, JUMP_KEY_BY_RESULT_TYPE, RESULT_TYPE_LABELS, RESULT_TYPE_ORDER
+from lib.ui import PAGE_BY_RESULT_TYPE, JUMP_KEY_BY_RESULT_TYPE, RESULT_TYPE_LABELS, RESULT_TYPE_ORDER
 from lib.search import search_all, fetch_result_detail, _extract_keywords
 from lib.db import fetch_df
 from lib.activation_items import load_all_items, load_meta_query_ids, build_recipe, best_matches, KIND_LABELS
@@ -47,26 +48,12 @@ RECIPE_COPY = {
     ),
 }
 
-inject_css()
-guard_page()
-top_bar(current_user())
-page_header("Asistente", "Pregunta qué necesitas habilitar y te doy la receta completa lista para pegar")
 
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-if st.session_state.chat_history and st.button("🧹 Limpiar conversación"):
-    st.session_state.chat_history = []
-    st.rerun()
-
-if not st.session_state.chat_history:
-    st.caption(
-        "Ejemplo: describe lo que necesitas habilitar (aunque sea un párrafo largo tipo "
-        "ticket) y te doy la funcionalidad, su descripción y los códigos ya agrupados para "
-        "pegar en los queries de activación."
-    )
-    if not llm.is_configured():
-        st.caption("ℹ️ Respondiendo solo con búsqueda por palabras clave (sin IA configurada).")
+def _link_button(label, key):
+    """Un st.button que la CSS del panel del asistente pinta como texto en negrita
+    hipervinculado en vez de un botón sólido — para que se sienta como un enlace, pero
+    conservando el manejo normal de clic + session_state + switch_page."""
+    return st.button(label, key=key)
 
 
 def _fetch_functionality_detail(functionality_id):
@@ -162,11 +149,11 @@ def _render_recipe(i, detail, recipe, meta_ids):
         st.code(",".join(codes), language=None)
         kind_key = {"funcion_codes": "funcion", "parametro_codes": "parametro", "app_functionality_codes": "app_functionality"}[field]
         query_id = meta_ids.get(kind_key)
-        if query_id and st.button(f"Ver query «{query_name}» →", key=f"chat_recipe_{i}_{kind_key}"):
+        if query_id and _link_button(f"Ver query «{query_name}» →", key=f"chat_recipe_{i}_{kind_key}"):
             st.session_state["jump_query_id"] = query_id
             st.switch_page("pages/6_Queries.py")
 
-    if st.button(f"Ver ficha completa de «{detail['name']}» →", key=f"chat_detail_{i}_{detail['id']}"):
+    if _link_button(f"Ver ficha completa de «{detail['name']}» →", key=f"chat_detail_{i}_{detail['id']}"):
         st.session_state["jump_functionality_id"] = detail["id"]
         st.switch_page("pages/1_Funcionalidades.py")
 
@@ -180,7 +167,7 @@ def _render_sources(i, actions, grouped):
             st.markdown(f"🔧 **{kind_label} {a['code']}: {a['name']}**{route}")
             if a.get("functionality_id"):
                 st.caption(f"Parte de la funcionalidad: {a['functionality_name']}")
-                if st.button(
+                if _link_button(
                     f"Ver funcionalidad «{a['functionality_name']}» →",
                     key=f"chat_action_{i}_{a['functionality_id']}_{a['code']}",
                 ):
@@ -197,16 +184,15 @@ def _render_sources(i, actions, grouped):
                 continue
             st.markdown(f"**{RESULT_TYPE_LABELS.get(result_type, result_type)}**")
             for r in grouped[result_type]:
-                if st.button(
+                if _link_button(
                     f"{r['label']} — {r['subtitle']}",
                     key=f"chat_{i}_{r['type']}_{r['id']}",
-                    use_container_width=True,
                 ):
                     st.session_state[JUMP_KEY_BY_RESULT_TYPE[r["type"]]] = r["id"]
                     st.switch_page(PAGE_BY_RESULT_TYPE[r["type"]])
 
 
-for i, turn in enumerate(st.session_state.chat_history):
+def _render_turn(i, turn):
     with st.chat_message("user"):
         st.write(turn["question"])
     with st.chat_message("assistant"):
@@ -236,8 +222,8 @@ for i, turn in enumerate(st.session_state.chat_history):
                 _render_sources(i, actions, grouped)
                 st.caption("¿No es lo que buscabas? Prueba con otras palabras o usa el buscador general.")
 
-question = st.chat_input("Escribe tu pregunta…")
-if question and question.strip():
+
+def _process_question(question):
     q = question.strip()
 
     items = load_all_items()
@@ -303,4 +289,30 @@ if question and question.strip():
             "meta_ids": meta_ids,
         }
     )
-    st.rerun()
+
+
+def render_assistant_widget():
+    """Burbuja flotante en la esquina inferior izquierda, disponible en cualquier página."""
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    with st.container(key="q10-assistant-bubble"):
+        with st.popover("🤖", help="Asistente Q10"):
+            with st.container(key="q10-assistant-panel"):
+                st.markdown("**🤖 Asistente Q10**")
+                st.caption("Pregunta qué necesitas habilitar, o cualquier duda sobre la documentación.")
+
+                if st.session_state.chat_history and _link_button("🧹 Limpiar conversación", key="chat_clear"):
+                    st.session_state.chat_history = []
+                    st.rerun()
+
+                if not st.session_state.chat_history and not llm.is_configured():
+                    st.caption("ℹ️ Respondiendo solo con búsqueda por palabras clave (sin IA configurada).")
+
+                for i, turn in enumerate(st.session_state.chat_history):
+                    _render_turn(i, turn)
+
+                question = st.chat_input("Escribe tu pregunta…", key="assistant_chat_input")
+                if question and question.strip():
+                    _process_question(question)
+                    st.rerun()

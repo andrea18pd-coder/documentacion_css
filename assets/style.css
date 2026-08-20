@@ -115,3 +115,50 @@ hr {
 a, a:visited {
   color: var(--q10-orange);
 }
+
+/* Burbuja flotante del Asistente, anclada en la esquina inferior izquierda */
+.st-key-q10-assistant-bubble {
+  position: fixed;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 1000000;
+}
+.st-key-q10-assistant-bubble [data-testid="stPopover"] > div,
+.st-key-q10-assistant-bubble [data-testid="stPopoverButton"] {
+  width: auto;
+}
+.st-key-q10-assistant-bubble [data-testid="stPopover"] button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: 0 6px 18px rgba(43, 29, 25, 0.35);
+}
+
+/* Panel del Asistente: enlaces en negrita hipervinculados en vez de botones sólidos */
+.st-key-q10-assistant-panel {
+  width: 320px;
+  max-width: 78vw;
+}
+.st-key-q10-assistant-panel .stButton > button {
+  background: none;
+  border: none;
+  padding: 0.15rem 0;
+  margin: 0;
+  color: var(--q10-orange-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-align: left;
+  border-radius: 0;
+  width: auto;
+  box-shadow: none;
+}
+.st-key-q10-assistant-panel .stButton > button:hover {
+  background: none;
+  color: var(--q10-orange);
+}
+.st-key-q10-assistant-panel .stButton {
+  width: auto;
+}

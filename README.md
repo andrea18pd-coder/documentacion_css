@@ -10,7 +10,7 @@ Plataforma interna en Streamlit para consultar y mantener actualizada la documen
 - Catálogo de APIs, con un mapa interactivo de dependencias entre recursos.
 - Catálogo de queries de soporte, enlazadas a las funcionalidades que habilitan.
 - Biblioteca de desarrollos reutilizables (recetas de habilitación, cambios estándar y procedimientos ante eventualidades) y catálogo de personalizaciones por institución.
-- Asistente en formato chat: responde preguntas sobre toda la documentación (qué habilitar, qué hace un query, qué trae una API, etc.) combinando el buscador interno con el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema) y, si hay una API key de Gemini configurada, redacta la respuesta con IA — si no, muestra igual los resultados encontrados sin IA.
+- Asistente en formato chat: una burbuja flotante 🤖 en la esquina inferior izquierda, disponible en cualquier página de la app, que responde preguntas sobre toda la documentación (qué habilitar, qué hace un query, qué trae una API, etc.). Cuando identifica con confianza qué funcionalidad se debe activar (al menos 2 palabras clave de la pregunta coinciden, o la única disponible si la pregunta es muy corta), muestra una "receta" de habilitación exacta y determinística — funciones, parámetros y funcionalidades a activar con sus códigos reales, sin depender de que la IA los transcriba bien — enlazada a la meta-query correspondiente (Asignar Permisos Roles / Actualizar parámetros institucionales / Activar-Inactivar Funcionalidades). Si no hay una coincidencia lo bastante segura, en vez de arriesgarse a mostrar una receta equivocada lista los resultados relacionados (queries, APIs, dimensiones, desarrollos, etc.) como enlaces de texto en negrita, buscando tanto en la documentación propia como en el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema). Si hay una API key de Gemini configurada, además redacta una respuesta en lenguaje natural citando el contenido real (SQL, endpoints, descripciones) — si no, muestra igual los resultados encontrados sin IA.
 
 Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
 
@@ -69,6 +69,7 @@ lib/
   activation_items.py           # extrae funciones/parámetros/funcionalidades de las notas de activación y arma la "receta" de habilitación
   sys_catalog.py                # catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema), respaldo de búsqueda
   llm.py                        # cliente Gemini para que el Asistente redacte respuestas (opcional, cae a solo-buscador si no hay API key)
+  assistant_widget.py           # burbuja flotante del Asistente (chat), inyectada en todas las páginas vía top_bar()
   api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
   1_Funcionalidades.py
@@ -78,7 +79,6 @@ pages/
   5_Administracion.py           # solo admin: usuarios y catálogos
   6_Queries.py                  # catálogo de queries de soporte
   7_Biblioteca_Desarrollos.py   # biblioteca de desarrollos reutilizables (P/F/E) + personalizaciones por institución
-  8_Asistente.py                # chat sobre toda la documentación, con receta de habilitación y respuesta redactada por IA (opcional)
 sql/
   schema.sql                    # DDL completo para Supabase (instalación nueva)
   migration_api_map.sql         # migración para agregar el mapa de APIs a una BD existente
