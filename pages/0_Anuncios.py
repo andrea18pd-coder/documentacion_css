@@ -36,7 +36,7 @@ if f_priority != "Todos":
     priority_value = next(p for p, label in PRIORITY_LABELS.items() if label == f_priority)
 
 query = """
-    select pn.id, pn.title, pn.description, pn.module_id, pn.priority, pn.active,
+    select pn.id, pn.title, pn.description, pn.module_id, pn.priority, pn.active, pn.created_by,
            pn.created_at, pn.updated_at, m.name as module_name, u.name as author
     from process_notes pn
     left join modules m on m.id = pn.module_id
@@ -103,7 +103,8 @@ else:
             st.write(row["description"])
             st.caption(f"{row['author'] or 'Usuario'} · {row['created_at']}")
 
-            if can_edit():
+            is_owner = row["created_by"] == current_user()["id"]
+            if can_edit() and is_owner:
                 with st.expander("✏️ Editar / eliminar este anuncio"):
                     with st.form(f"edit_pn_{row['id']}"):
                         e_title = st.text_input("Título", value=row["title"])
