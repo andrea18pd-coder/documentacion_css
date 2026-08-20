@@ -7,7 +7,8 @@ Plataforma interna en Streamlit para consultar y mantener actualizada la documen
 - Desarrollos personalizados.
 - Dimensiones en las distintas partes de Q10.
 - Funcionalidades filtrables por plan y por tipo.
-- Catálogo de APIs y sus interconexiones.
+- Catálogo de APIs, con un mapa interactivo de dependencias entre recursos.
+- Catálogo de queries de soporte, enlazadas a las funcionalidades que habilitan.
 
 Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
 
@@ -19,7 +20,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
 
 ## Puesta en marcha (local)
 
-1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs e interconexiones).
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs y queries). Si el proyecto ya existía antes de que se agregara el mapa de APIs o el catálogo de queries, corre además `sql/migration_api_map.sql` y `sql/migration_queries.sql`.
 
 2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
 
@@ -60,17 +61,26 @@ app.py                          # entrypoint: login y navegación según rol
 lib/
   db.py                         # conexión y helpers de lectura/escritura sobre Supabase
   auth.py                       # login, sesión y control de acceso por rol
-  ui.py                         # estilo Q10, header y componentes reutilizables
+  ui.py                         # estilo Q10, header, buscador global y componentes reutilizables
   catalog.py                    # catálogos compartidos: módulos, planes, tipos
+  search.py                     # búsqueda global (funcionalidades, desarrollos, dimensiones, APIs, queries)
+  api_graph.py                  # construcción y render del mapa interactivo de dependencias entre APIs
 pages/
   1_Funcionalidades.py
   2_Desarrollos_Personalizados.py
   3_Dimensiones.py
-  4_APIs.py
+  4_APIs.py                     # catálogo de APIs + mapa interactivo de dependencias
   5_Administracion.py           # solo admin: usuarios y catálogos
-sql/schema.sql                  # DDL completo para Supabase
+  6_Queries.py                  # catálogo de queries de soporte
+sql/
+  schema.sql                    # DDL completo para Supabase (instalación nueva)
+  migration_api_map.sql         # migración para agregar el mapa de APIs a una BD existente
+  migration_queries.sql         # migración para agregar el catálogo de queries a una BD existente
 scripts/hash_password.py        # utilidad para generar el hash del primer admin
-assets/style.css                # paleta e identidad visual inspirada en q10.com
+assets/
+  style.css                     # paleta e identidad visual inspirada en q10.com
+  api_graph.css, api_graph.js   # estilo y lógica del mapa interactivo de APIs (tema claro Q10)
+  vis-network.min.js            # librería de grafos (vis-network), embebida localmente
 ```
 
 ## Roles
