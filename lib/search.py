@@ -86,4 +86,33 @@ def search_all(query):
         subtitle = "Query" + (f" · {r.tags}" if r.tags else "")
         results.append({"type": "query", "id": int(r.id), "label": r.name, "subtitle": subtitle})
 
+    dev_article_df = fetch_df(
+        """
+        select id, name, kind
+        from custom_development_articles
+        where name ilike :q or description_html ilike :q
+        order by name
+        limit :limit
+        """,
+        {"q": q, "limit": RESULT_LIMIT_PER_TABLE},
+        ttl=5,
+    )
+    for r in dev_article_df.itertuples():
+        results.append({"type": "dev_article", "id": int(r.id), "label": r.name, "subtitle": r.kind})
+
+    pers_df = fetch_df(
+        """
+        select id, name, institution
+        from personalizations
+        where name ilike :q or description ilike :q or institution ilike :q
+        order by name
+        limit :limit
+        """,
+        {"q": q, "limit": RESULT_LIMIT_PER_TABLE},
+        ttl=5,
+    )
+    for r in pers_df.itertuples():
+        subtitle = "Personalización" + (f" · {r.institution}" if r.institution else "")
+        results.append({"type": "personalization", "id": int(r.id), "label": r.name, "subtitle": subtitle})
+
     return results

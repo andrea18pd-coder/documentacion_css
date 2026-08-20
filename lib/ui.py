@@ -32,6 +32,8 @@ PAGE_BY_RESULT_TYPE = {
     "dimension": "pages/3_Dimensiones.py",
     "api": "pages/4_APIs.py",
     "query": "pages/6_Queries.py",
+    "dev_article": "pages/7_Biblioteca_Desarrollos.py",
+    "personalization": "pages/7_Biblioteca_Desarrollos.py",
 }
 
 JUMP_KEY_BY_RESULT_TYPE = {
@@ -40,6 +42,8 @@ JUMP_KEY_BY_RESULT_TYPE = {
     "dimension": "jump_dimension_id",
     "api": "jump_api_id",
     "query": "jump_query_id",
+    "dev_article": "jump_dev_article_id",
+    "personalization": "jump_personalization_id",
 }
 
 RESULT_TYPE_LABELS = {
@@ -48,9 +52,19 @@ RESULT_TYPE_LABELS = {
     "query": "🗄️ Queries",
     "dimension": "📐 Dimensiones",
     "custom_development": "🛠️ Desarrollos personalizados",
+    "dev_article": "📚 Biblioteca de desarrollos",
+    "personalization": "🏫 Personalizaciones",
 }
 
-RESULT_TYPE_ORDER = ["functionality", "api", "query", "dimension", "custom_development"]
+RESULT_TYPE_ORDER = [
+    "functionality",
+    "api",
+    "query",
+    "dimension",
+    "custom_development",
+    "dev_article",
+    "personalization",
+]
 
 
 def top_bar(user):

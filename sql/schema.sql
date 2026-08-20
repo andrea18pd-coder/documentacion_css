@@ -158,6 +158,36 @@ create table if not exists api_connections (
     check (connected_api_id is not null or target_resource_id is not null)
 );
 
+-- Biblioteca interna de desarrollos reutilizables (no confundir con `custom_developments`,
+-- que es el seguimiento de solicitudes por cliente). Cada artículo trae una receta de
+-- "cómo habilitar" una funcionalidad, o un procedimiento ante una eventualidad.
+-- kind: 'Personalización' | 'Funcionalidad' | 'Eventualidad'
+create table if not exists custom_development_articles (
+    id serial primary key,
+    external_id integer,
+    name text not null,
+    description_html text not null,
+    kind text not null,
+    created_by integer references users(id) on delete set null,
+    updated_by integer references users(id) on delete set null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
+-- Catálogo de códigos de "Personalización: NNN" por institución, referenciados desde
+-- notas de funcionalidades y desde los artículos de custom_development_articles.
+create table if not exists personalizations (
+    id serial primary key,
+    external_id integer,
+    name text not null,
+    description text,
+    institution text,
+    created_by integer references users(id) on delete set null,
+    updated_by integer references users(id) on delete set null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+);
+
 create index if not exists idx_functionalities_module on functionalities(module_id);
 create index if not exists idx_functionalities_type on functionalities(type_id);
 create index if not exists idx_notes_functionality on notes(functionality_id);
@@ -172,6 +202,11 @@ create index if not exists idx_apis_requires on apis(requires_list_of_id);
 create index if not exists idx_api_connections_api on api_connections(api_id);
 create index if not exists idx_api_connections_connected on api_connections(connected_api_id);
 create index if not exists idx_api_connections_target_resource on api_connections(target_resource_id);
+create index if not exists idx_custom_development_articles_name on custom_development_articles(name);
+create index if not exists idx_custom_development_articles_kind on custom_development_articles(kind);
+create index if not exists idx_personalizations_name on personalizations(name);
+create index if not exists idx_personalizations_institution on personalizations(institution);
+create index if not exists idx_personalizations_external_id on personalizations(external_id);
 
 -- No se sembran módulos/planes/tipos: se gestionan desde la página de Administración
 -- una vez que exista el primer usuario admin (ver README para el bootstrap del admin).
