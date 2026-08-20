@@ -3,7 +3,7 @@ import streamlit as st
 from lib.auth import login_form, is_logged_in, is_admin, restore_session
 from lib.ui import inject_css, page_header, top_bar
 
-st.set_page_config(page_title="Q10 · Documentación CSS", page_icon="📘", layout="wide")
+st.set_page_config(page_title="Q10 · Documentación CSS", page_icon="🤓", layout="wide")
 
 inject_css()
 restore_session()
@@ -17,12 +17,12 @@ if not is_logged_in():
 
 pages = [
     st.Page("pages/0_Anuncios.py", title="Anuncios", icon="📢"),
-    st.Page("pages/1_Funcionalidades.py", title="Funcionalidades", icon="📋", default=True),
-    st.Page("pages/2_Desarrollos_Personalizados.py", title="Desarrollos personalizados", icon="🛠️"),
-    st.Page("pages/3_Dimensiones.py", title="Dimensiones", icon="📐"),
-    st.Page("pages/4_APIs.py", title="APIs", icon="🔌"),
-    st.Page("pages/6_Queries.py", title="Queries", icon="🗄️"),
-    st.Page("pages/7_Biblioteca_Desarrollos.py", title="Biblioteca de desarrollos", icon="📚"),
+    st.Page("pages/1_Funcionalidades.py", title="Funcionalidades", default=True),
+    st.Page("pages/2_Desarrollos_Personalizados.py", title="Desarrollos personalizados"),
+    st.Page("pages/3_Dimensiones.py", title="Dimensiones"),
+    st.Page("pages/4_APIs.py", title="APIs"),
+    st.Page("pages/6_Queries.py", title="Queries"),
+    st.Page("pages/7_Biblioteca_Desarrollos.py", title="Biblioteca de desarrollos"),
 ]
 if is_admin():
     pages.append(st.Page("pages/5_Administracion.py", title="Administración", icon="⚙️"))
