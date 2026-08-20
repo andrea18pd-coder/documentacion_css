@@ -16,6 +16,18 @@ create table if not exists users (
     created_at timestamptz not null default now()
 );
 
+-- Sesiones persistentes: el token viaja en la URL (?session=...) para que la sesión
+-- sobreviva a un refresh de la página sin tener que iniciar sesión de nuevo.
+create table if not exists sessions (
+    token text primary key,
+    user_id integer not null references users(id) on delete cascade,
+    created_at timestamptz not null default now(),
+    expires_at timestamptz not null
+);
+
+create index if not exists idx_sessions_user on sessions(user_id);
+create index if not exists idx_sessions_expires on sessions(expires_at);
+
 create table if not exists modules (
     id serial primary key,
     name text not null unique,

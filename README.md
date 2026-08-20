@@ -13,7 +13,7 @@ Plataforma interna en Streamlit para consultar y mantener actualizada la documen
 - Biblioteca de desarrollos reutilizables (recetas de habilitación, cambios estándar y procedimientos ante eventualidades) y catálogo de personalizaciones por institución.
 - Asistente en formato chat: una burbuja flotante 🤖 en la esquina inferior izquierda, disponible en cualquier página de la app, que responde preguntas sobre toda la documentación (qué habilitar, qué hace un query, qué trae una API, etc.). Cuando identifica con confianza qué funcionalidad se debe activar (al menos 2 palabras clave de la pregunta coinciden, o la única disponible si la pregunta es muy corta), muestra una "receta" de habilitación exacta y determinística — funciones, parámetros y funcionalidades a activar con sus códigos reales, sin depender de que la IA los transcriba bien — enlazada a la meta-query correspondiente (Asignar Permisos Roles / Actualizar parámetros institucionales / Activar-Inactivar Funcionalidades). Si no hay una coincidencia lo bastante segura, en vez de arriesgarse a mostrar una receta equivocada lista los resultados relacionados (queries, APIs, dimensiones, desarrollos, etc.) como enlaces de texto en negrita, buscando tanto en la documentación propia como en el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades exportados del sistema). Si hay una API key de Gemini configurada, además redacta una respuesta en lenguaje natural citando el contenido real (SQL, endpoints, descripciones) — si no, muestra igual los resultados encontrados sin IA.
 
-Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
+Login propio con tres roles (`admin`, `editor`, `lector`) y sesión persistente: la sesión sobrevive a un refresh de la página (no hay que iniciar sesión de nuevo cada vez), mediante un token en la URL (`?session=...`) validado contra la base de datos y con vencimiento a los 30 días. Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
 
 ## Stack
 
@@ -23,7 +23,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **M
 
 ## Puesta en marcha (local)
 
-1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones, anuncios/notas de proceso y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql`, `sql/migration_sys_catalog.sql`, `sql/migration_process_notes.sql` y/o `sql/migration_announcement_notifications.sql` según corresponda.
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs, recursos/categorías de APIs, queries, biblioteca de desarrollos, personalizaciones, anuncios/notas de proceso y el catálogo maestro de Q10). Si el proyecto ya existía antes de que se agregara alguna de estas piezas, corre además `sql/migration_api_map.sql`, `sql/migration_queries.sql`, `sql/migration_custom_dev_library.sql`, `sql/migration_sys_catalog.sql`, `sql/migration_process_notes.sql`, `sql/migration_announcement_notifications.sql` y/o `sql/migration_sessions.sql` según corresponda.
 
 2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
 
@@ -90,6 +90,7 @@ sql/
   migration_sys_catalog.sql     # migración para agregar el catálogo maestro real de Q10 (funciones/parámetros/funcionalidades)
   migration_process_notes.sql   # migración para agregar los anuncios/notas de proceso
   migration_announcement_notifications.sql # migración para el aviso 🔔 de anuncios nuevos dentro de la app
+  migration_sessions.sql        # migración para la sesión persistente (sobrevive a un refresh)
 scripts/hash_password.py        # utilidad para generar el hash del primer admin
 assets/
   style.css                     # paleta e identidad visual inspirada en q10.com

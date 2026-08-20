@@ -1,11 +1,15 @@
 """Login propio y control de acceso por rol (admin / editor / lector)."""
 
+import secrets as secrets_lib
+from datetime import datetime, timedelta, timezone
+
 import streamlit as st
 import bcrypt
 
-from lib.db import fetch_df
+from lib.db import fetch_df, execute
 
 ROLES = ["admin", "editor", "lector"]
+SESSION_TTL_DAYS = 30
 
 
 def _get_user_by_email(email):
@@ -17,6 +21,62 @@ def _get_user_by_email(email):
     if df.empty:
         return None
     return df.iloc[0].to_dict()
+
+
+def _create_session(user_id):
+    """Crea un token de sesión persistente y lo devuelve (sin guardarlo aún en la URL)."""
+    token = secrets_lib.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(days=SESSION_TTL_DAYS)
+    execute(
+        "insert into sessions (token, user_id, expires_at) values (:token, :user_id, :expires_at)",
+        {"token": token, "user_id": user_id, "expires_at": expires_at},
+    )
+    return token
+
+
+def _get_session_user(token):
+    df = fetch_df(
+        """
+        select u.id, u.email, u.name, u.role
+        from sessions s
+        join users u on u.id = s.user_id
+        where s.token = :token and s.expires_at > now() and u.active
+        """,
+        {"token": token},
+        ttl=0,
+    )
+    if df.empty:
+        return None
+    return df.iloc[0].to_dict()
+
+
+def _delete_session(token):
+    execute("delete from sessions where token = :token", {"token": token})
+
+
+def restore_session():
+    """Si la URL trae un token de sesión válido (?session=...) y todavía no hay usuario en
+    session_state (p. ej. justo después de un refresh de la página), restaura la sesión sin
+    pedir credenciales de nuevo."""
+    if "user" in st.session_state:
+        return
+    token = st.query_params.get("session")
+    if not token:
+        return
+    try:
+        user = _get_session_user(token)
+    except Exception:
+        return
+    if user:
+        st.session_state.user = {
+            "id": int(user["id"]),
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"],
+        }
+    else:
+        # Token inválido o vencido: lo quitamos de la URL para no seguir intentándolo.
+        del st.query_params["session"]
 
 
 def login_form():
@@ -49,6 +109,7 @@ def login_form():
             "name": user["name"],
             "role": user["role"],
         }
+        st.query_params["session"] = _create_session(user["id"])
         st.rerun()
     else:
         st.error("Contraseña incorrecta.")
@@ -63,6 +124,10 @@ def is_logged_in():
 
 
 def logout():
+    token = st.query_params.get("session")
+    if token:
+        _delete_session(token)
+        del st.query_params["session"]
     st.session_state.pop("user", None)
     st.rerun()
 

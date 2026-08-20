@@ -1,11 +1,12 @@
 import streamlit as st
 
-from lib.auth import login_form, is_logged_in, is_admin
+from lib.auth import login_form, is_logged_in, is_admin, restore_session
 from lib.ui import inject_css, page_header, top_bar
 
 st.set_page_config(page_title="Q10 · Documentación CSS", page_icon="📘", layout="wide")
 
 inject_css()
+restore_session()
 
 if not is_logged_in():
     top_bar(None)
