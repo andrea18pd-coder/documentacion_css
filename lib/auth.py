@@ -5,12 +5,20 @@ from datetime import datetime, timedelta, timezone
 
 import streamlit as st
 import bcrypt
+from streamlit_cookies_controller import CookieController
 
 from lib.db import fetch_df, execute
 
 ROLES = ["admin", "editor", "lector"]
 SESSION_TTL_DAYS = 30
 _COOKIE_NAME = "css_session"
+
+
+def _cookies():
+    # Se instancia en cada llamada a propósito: por dentro se apoya en
+    # st.session_state, así que es barato, y evita cachear en un global de módulo
+    # (que se compartiría entre usuarios distintos del mismo proceso del servidor).
+    return CookieController()
 
 
 def _get_user_by_email(email):
@@ -55,35 +63,6 @@ def _delete_session(token):
     execute("delete from sessions where token = :token", {"token": token})
 
 
-def _set_session_cookie_and_reload(token):
-    """Escribe la cookie vía JS (Streamlit no tiene una API en Python para setear cookies de
-    respuesta) y fuerza un reload real de la página. Nada de esto se puede hacer con
-    `st.rerun()` solo: si se llama justo después de crear el componente, Streamlit interrumpe
-    el script antes de que el iframe llegue a cargar y ejecutar su script."""
-    max_age = SESSION_TTL_DAYS * 86400
-    st.iframe(
-        f"""
-        <script>
-        document.cookie = '{_COOKIE_NAME}={token}; path=/; max-age={max_age}; SameSite=Lax';
-        window.parent.location.reload();
-        </script>
-        """,
-        height=1,
-    )
-
-
-def _clear_session_cookie_and_reload():
-    st.iframe(
-        f"""
-        <script>
-        document.cookie = '{_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax';
-        window.parent.location.reload();
-        </script>
-        """,
-        height=1,
-    )
-
-
 def restore_session():
     """Si el navegador trae la cookie de sesión y todavía no hay usuario en session_state
     (p. ej. justo después de un refresh o al navegar a otra página), restaura la sesión sin
@@ -91,7 +70,7 @@ def restore_session():
     cualquier tipo de navegación entre páginas de la app."""
     if "user" in st.session_state:
         return
-    token = st.context.cookies.get(_COOKIE_NAME)
+    token = _cookies().get(_COOKIE_NAME)
     if not token:
         return
     try:
@@ -140,9 +119,13 @@ def login_form():
             "role": user["role"],
         }
         st.session_state["_session_token"] = token
-        st.success("Ingresando…")
-        _set_session_cookie_and_reload(token)
-        st.stop()
+        _cookies().set(
+            _COOKIE_NAME,
+            token,
+            max_age=SESSION_TTL_DAYS * 86400,
+            same_site="lax",
+        )
+        st.rerun()
     else:
         st.error("Contraseña incorrecta.")
 
@@ -156,13 +139,13 @@ def is_logged_in():
 
 
 def logout():
-    token = st.session_state.get("_session_token") or st.context.cookies.get(_COOKIE_NAME)
+    token = st.session_state.get("_session_token") or _cookies().get(_COOKIE_NAME)
     if token:
         _delete_session(token)
     st.session_state.pop("user", None)
     st.session_state.pop("_session_token", None)
-    _clear_session_cookie_and_reload()
-    st.stop()
+    _cookies().remove(_COOKIE_NAME, same_site="lax")
+    st.rerun()
 
 
 def has_role(allowed_roles):
