@@ -1,0 +1,117 @@
+/* Paleta e identidad visual inspiradas en www.q10.com */
+
+:root {
+  --q10-orange: #FF6A13;
+  --q10-orange-dark: #E85A00;
+  --q10-dark: #2B1D19;
+  --q10-peach: #FFE4D2;
+  --q10-bg: #FFFBF9;
+  --q10-text-secondary: #7A6A63;
+  --q10-border: #F0DCCB;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+html, body, [class*="css"] {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--q10-dark);
+}
+
+h1, h2, h3, h4, .q10-brand, .q10-header-title {
+  font-family: 'Poppins', 'Inter', sans-serif;
+}
+
+[data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+  background-color: var(--q10-bg);
+}
+
+[data-testid="stSidebar"] {
+  background-color: var(--q10-peach);
+  border-right: 1px solid var(--q10-border);
+}
+
+.q10-brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--q10-orange);
+}
+.q10-brand span {
+  font-weight: 400;
+  color: var(--q10-dark);
+}
+
+.q10-header {
+  padding: 1.25rem 0 0.75rem 0;
+  border-bottom: 1px solid var(--q10-border);
+  margin-bottom: 1.25rem;
+}
+.q10-header-title {
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--q10-dark);
+}
+.q10-header-subtitle {
+  color: var(--q10-text-secondary);
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+/* Formularios como tarjetas suaves, al estilo de las cards de q10.com */
+div[data-testid="stForm"] {
+  background-color: var(--q10-peach);
+  border: 1px solid var(--q10-border);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+}
+
+/* Botones tipo píldora naranja, como los CTA de q10.com */
+.stButton > button, .stFormSubmitButton > button, .stDownloadButton > button {
+  background-color: var(--q10-orange);
+  color: white;
+  border-radius: 999px;
+  border: none;
+  font-weight: 600;
+  padding: 0.5rem 1.25rem;
+}
+.stButton > button:hover, .stFormSubmitButton > button:hover, .stDownloadButton > button:hover {
+  background-color: var(--q10-orange-dark);
+  color: white;
+}
+
+div[data-testid="stExpander"] {
+  border: 1px solid var(--q10-border);
+  border-radius: 14px;
+  background-color: white;
+}
+
+[data-testid="stDataFrame"] {
+  border: 1px solid var(--q10-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+[data-testid="stMetric"] {
+  background-color: var(--q10-peach);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+}
+
+.stTabs [data-baseweb="tab-list"] {
+  gap: 0.5rem;
+}
+.stTabs [data-baseweb="tab"] {
+  border-radius: 999px;
+  padding: 0.4rem 1rem;
+}
+.stTabs [aria-selected="true"] {
+  background-color: var(--q10-peach);
+  color: var(--q10-orange) !important;
+}
+
+hr {
+  border-color: var(--q10-border);
+}
+
+a, a:visited {
+  color: var(--q10-orange);
+}

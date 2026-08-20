@@ -1,1 +1,87 @@
-# documentacion_css
+# Documentación CSS · Q10
+
+Plataforma interna en Streamlit para consultar y mantener actualizada la documentación del área de CSS:
+
+- Parámetros, funciones y funcionalidades a habilitar según cada tipo de petición.
+- Consideraciones y notas posteriores a una habilitación.
+- Desarrollos personalizados.
+- Dimensiones en las distintas partes de Q10.
+- Funcionalidades filtrables por plan y por tipo.
+- Catálogo de APIs y sus interconexiones.
+
+Login propio con tres roles (`admin`, `editor`, `lector`). Los catálogos de **Módulos**, **Planes** y **Tipos** son administrables desde la propia app, para poder adaptar el alcance del proyecto sin tocar código.
+
+## Stack
+
+- [Streamlit](https://streamlit.io/) (multipágina, con navegación según el rol del usuario).
+- [Supabase](https://supabase.com/) (Postgres) como base de datos, vía `st.connection(type="sql")`.
+- `bcrypt` para el hash de contraseñas.
+
+## Puesta en marcha (local)
+
+1. **Crear el proyecto en Supabase** y correr el script `sql/schema.sql` completo en su SQL editor. Esto crea todas las tablas (usuarios, módulos, planes, tipos, funcionalidades, notas, desarrollos personalizados, dimensiones, APIs e interconexiones).
+
+2. **Generar el primer usuario admin.** Como no hay un endpoint público de registro, se crea manualmente:
+
+   ```bash
+   pip install bcrypt
+   python scripts/hash_password.py "tu-contraseña-temporal"
+   ```
+
+   Copia el hash impreso y ejecútalo en el SQL editor de Supabase:
+
+   ```sql
+   insert into users (email, name, password_hash, role, active)
+   values ('tu_correo@empresa.com', 'Tu Nombre', '<hash pegado aquí>', 'admin', true);
+   ```
+
+3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`).
+
+4. **Instalar dependencias y correr la app:**
+
+   ```bash
+   pip install -r requirements.txt
+   streamlit run app.py
+   ```
+
+5. Inicia sesión con el usuario admin creado en el paso 2, ve a **Administración** y crea al menos un **Módulo**, un **Plan** y un **Tipo** antes de cargar contenido en las demás páginas.
+
+## Despliegue en Streamlit Community Cloud
+
+1. Sube este repositorio a GitHub.
+2. En [share.streamlit.io](https://share.streamlit.io/), crea una nueva app apuntando a `app.py`.
+3. En la sección **Secrets** de la configuración de la app, pega el mismo contenido que tienes en tu `.streamlit/secrets.toml` local.
+4. Despliega. Como los datos viven en Supabase (no en el disco de Streamlit Cloud), las ediciones de los usuarios persisten aunque la app se reinicie o se redepliegue.
+
+## Estructura del proyecto
+
+```
+app.py                          # entrypoint: login y navegación según rol
+lib/
+  db.py                         # conexión y helpers de lectura/escritura sobre Supabase
+  auth.py                       # login, sesión y control de acceso por rol
+  ui.py                         # estilo Q10, header y componentes reutilizables
+  catalog.py                    # catálogos compartidos: módulos, planes, tipos
+pages/
+  1_Funcionalidades.py
+  2_Desarrollos_Personalizados.py
+  3_Dimensiones.py
+  4_APIs.py
+  5_Administracion.py           # solo admin: usuarios y catálogos
+sql/schema.sql                  # DDL completo para Supabase
+scripts/hash_password.py        # utilidad para generar el hash del primer admin
+assets/style.css                # paleta e identidad visual inspirada en q10.com
+```
+
+## Roles
+
+| Rol      | Puede consultar | Puede crear/editar/eliminar contenido | Gestiona usuarios y catálogos |
+|----------|:---:|:---:|:---:|
+| Lector   | ✅ | ❌ | ❌ |
+| Editor   | ✅ | ✅ | ❌ |
+| Admin    | ✅ | ✅ | ✅ |
+
+## Próximos pasos sugeridos
+
+- Ajustar la paleta/tipografía si la marca cambia (todo el estilo vive en `assets/style.css` y `.streamlit/config.toml`).
+- Agregar más módulos de contenido: el patrón de cada página (filtros → tabla → detalle → formulario de alta/edición/borrado) está pensado para ser fácil de replicar.
