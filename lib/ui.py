@@ -222,11 +222,27 @@ def field_card(label, value, key):
 
 
 def extract_activation_codes(text):
-    """Extrae los códigos numéricos (uno por línea, ej. '894: Inicio - ...') de un texto de
-    parámetros/pasos de activación, listos para copiar y pegar en la habilitación en BD."""
+    """Extrae los códigos numéricos de la sección 'Funciones / Permisos' (ej. '894: Inicio - ...')
+    de un texto de parámetros/pasos de activación, listos para copiar y pegar en la habilitación en BD.
+
+    Los códigos de otras secciones (ej. 'Parámetros:') no aplican a la habilitación y se ignoran.
+    """
     if not text or (isinstance(text, float) and pd.isna(text)):
         return []
-    return re.findall(r"(?m)^\s*[-*]?\s*(\d+)\s*:", str(text))
+    text = str(text)
+    heading = re.search(r"(?im)^\s*funciones\s*/\s*permisos\s*:", text)
+    if not heading:
+        return []
+    codes = []
+    for line in text[heading.end():].splitlines():
+        if not line.strip():
+            continue
+        m = re.match(r"^\s*[-*]?\s*(\d+)\s*:", line)
+        if m:
+            codes.append(m.group(1))
+        elif not re.match(r"^\s*[-*]", line):
+            break
+    return codes
 
 
 def confirm_delete_button(label, state_key):
