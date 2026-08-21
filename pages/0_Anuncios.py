@@ -8,7 +8,7 @@ from lib.ui import inject_css, page_header, top_bar, select_with_id, confirm_del
 from lib.db import fetch_df, execute, execute_returning_id
 from lib.catalog import list_modules, options
 from lib import notifications
-from lib.integrations import notify_new_announcement
+from lib.integrations import notify_new_announcement_email, notify_new_announcement_teams
 
 inject_css()
 guard_page()
@@ -88,20 +88,20 @@ if can_edit():
                     },
                 )
                 recipients_df = fetch_df("select email from users where active = true order by email", ttl=15)
-                notify_new_announcement(
-                    {
-                        "id": new_id,
-                        "title": title.strip(),
-                        "description": description.strip(),
-                        "priority": priority,
-                        "priority_label": PRIORITY_LABELS[priority],
-                        "recipients": ";".join(recipients_df["email"].tolist()),
-                        "module": dict(module_opts).get(module_id),
-                        "author": current_user()["name"],
-                        "author_email": current_user()["email"],
-                        "created_at": datetime.now(timezone.utc).isoformat(),
-                    }
-                )
+                announcement_payload = {
+                    "id": new_id,
+                    "title": title.strip(),
+                    "description": description.strip(),
+                    "priority": priority,
+                    "priority_label": PRIORITY_LABELS[priority],
+                    "recipients": ";".join(recipients_df["email"].tolist()),
+                    "module": dict(module_opts).get(module_id),
+                    "author": current_user()["name"],
+                    "author_email": current_user()["email"],
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                }
+                notify_new_announcement_email(announcement_payload)
+                notify_new_announcement_teams(announcement_payload)
                 st.success("Anuncio publicado. El resto del equipo lo verá como anuncio nuevo al entrar a la app.")
                 st.rerun()
 

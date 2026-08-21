@@ -52,15 +52,27 @@ Login propio con tres roles (`admin`, `editor`, `lector`) y sesión persistente:
 
 ## Notificar anuncios por correo/Teams con Power Automate
 
-La app no expone un API REST propio (Streamlit no lo permite), pero sí puede *llamar* a un flujo de Power Automate en el momento en que se publica un anuncio en la página **Anuncios**. Así el flujo actúa como el disparador y decide qué notificar:
+La app no expone un API REST propio (Streamlit no lo permite), pero sí puede *llamar* a un flujo/webhook externo en el momento en que se publica un anuncio en la página **Anuncios**. Son dos integraciones independientes — cada una funciona con su propio secreto y sin que la otra esté configurada:
+
+### Correo (Power Automate)
 
 1. En [Power Automate](https://make.powerautomate.com/), crea un **flujo de nube instantáneo** con el disparador **"Cuando se recibe una solicitud HTTP"**.
 2. En el disparador, define el esquema JSON del cuerpo con estos campos (todos como `string`, excepto `id` que es `integer`): `id`, `title`, `description`, `priority`, `priority_label`, `recipients`, `module`, `author`, `author_email`, `created_at`. `recipients` trae los correos de todos los usuarios activos de la app, separados por `;` — úsalo directamente como destinatario en vez de una dirección fija, así no hay que mantener una lista aparte en Microsoft 365.
-3. Agrega las acciones que quieras después del disparador: **Enviar un correo electrónico (V2)** (destinatario = campo dinámico `recipients`) y/o **Publicar un mensaje en un canal de Teams**, usando los campos anteriores en el cuerpo del mensaje.
+3. Agrega la acción **Enviar un correo electrónico (V2)** (destinatario = campo dinámico `recipients`), usando los campos anteriores en el cuerpo del mensaje.
 4. Guarda el flujo y copia la **URL HTTP POST** que Power Automate genera para el disparador.
 5. Pega esa URL en `anuncios_webhook_url`, dentro de la sección `[power_automate]` de tu `secrets.toml` (local y/o en Streamlit Cloud).
 
-Si no configuras esta URL, la publicación de anuncios sigue funcionando igual — simplemente no se dispara ninguna notificación externa. Si el flujo falla o no responde, el anuncio igual queda publicado en la app; solo se muestra una advertencia.
+> **Nota:** en tenants donde el flujo queda alojado en `*.environment.api.powerplatform.com`, este disparador puede exigir un token OAuth de Microsoft Entra ID además de la URL (error `DirectApiAuthorizationRequired`). Si te pasa, pide a tu administrador de Power Platform que revise esa política del entorno, o implementa la autenticación OAuth del lado de la app.
+
+### Teams
+
+1. En el canal de Teams donde quieras publicar los anuncios: **"..."** junto al nombre del canal → **Workflows** → busca la plantilla **"Enviar alertas de webhook a un canal"** (es el reemplazo del Incoming Webhook clásico, que Microsoft está retirando).
+2. Elige el equipo y canal destino, dale un nombre y créala. Copia la **URL** que te entrega.
+3. Pega esa URL en `anuncios_webhook_url`, dentro de la sección `[teams]` de tu `secrets.toml`.
+
+A diferencia del webhook de correo, este sí funciona solo con la URL (sin OAuth adicional), pero espera el cuerpo en formato *Adaptive Card* — la app ya arma esa tarjeta automáticamente en `lib/integrations.py`.
+
+Si no configuras alguna de estas URLs, la publicación de anuncios sigue funcionando igual — simplemente no se dispara esa notificación en particular. Si una llamada falla, el anuncio igual queda publicado en la app; solo se muestra una advertencia.
 
 ## Despliegue en Streamlit Community Cloud
 
