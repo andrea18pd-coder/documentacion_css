@@ -120,8 +120,8 @@ hr {
   border: 1px solid var(--q10-border) !important;
   border-radius: 14px !important;
   padding: 0.9rem 1.1rem !important;
-  height: 112px !important;
-  max-height: 112px !important;
+  height: 170px !important;
+  max-height: 170px !important;
   box-sizing: border-box !important;
   display: flex !important;
   flex-direction: column !important;
