@@ -1,3 +1,5 @@
+from io import BytesIO
+
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -232,6 +234,65 @@ if selected_op is not None:
                 st.rerun()
 
 st.divider()
+
+with st.expander("📤 Exportar a Excel"):
+    st.caption(
+        "Genera un archivo .xlsx con todas las operaciones (endpoints), sus dependencias "
+        "(parámetros que conectan un recurso con otro) y el catálogo de recursos."
+    )
+
+    export_ops_df = fetch_df(
+        """
+        select r.name as recurso, a.name as operacion, a.method as metodo, a.endpoint,
+               a.description as descripcion, c.top_category as categoria, c.sub_category as subcategoria,
+               a.status as estado, req.name as requiere_antes
+        from apis a
+        join api_resources r on r.id = a.resource_id
+        left join api_categories c on c.id = a.category_id
+        left join apis req on req.id = a.requires_list_of_id
+        order by r.name, a.name
+        """,
+        ttl=15,
+    )
+    export_deps_df = fetch_df(
+        """
+        select r2.name as recurso_origen, a2.name as operacion_origen, ac.param_name as parametro,
+               r.name as recurso_destino, ac.relationship_description as descripcion_relacion
+        from api_connections ac
+        join apis a2 on a2.id = ac.api_id
+        join api_resources r2 on r2.id = a2.resource_id
+        join api_resources r on r.id = ac.target_resource_id
+        order by r2.name, a2.name
+        """,
+        ttl=15,
+    )
+    export_resources_df = fetch_df(
+        "select name as recurso, description as descripcion from api_resources order by name", ttl=15
+    )
+
+    excel_buffer = BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+        export_ops_df.to_excel(writer, sheet_name="Operaciones", index=False)
+        export_deps_df.to_excel(writer, sheet_name="Dependencias", index=False)
+        export_resources_df.to_excel(writer, sheet_name="Recursos", index=False)
+        for sheet_name, sheet_df in (
+            ("Operaciones", export_ops_df),
+            ("Dependencias", export_deps_df),
+            ("Recursos", export_resources_df),
+        ):
+            worksheet = writer.sheets[sheet_name]
+            for col_idx, col_name in enumerate(sheet_df.columns, start=1):
+                max_len = max([len(str(col_name))] + [len(str(v)) for v in sheet_df[col_name].head(200)])
+                worksheet.column_dimensions[worksheet.cell(row=1, column=col_idx).column_letter].width = min(
+                    max(max_len + 2, 10), 60
+                )
+
+    st.download_button(
+        "⬇️ Descargar Excel",
+        data=excel_buffer.getvalue(),
+        file_name="apis_q10.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
 
 with st.expander("📋 Ver tabla completa de operaciones"):
     full_df = fetch_df(

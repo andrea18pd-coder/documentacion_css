@@ -6,3 +6,4 @@ bcrypt>=4.0
 google-genai>=1.0
 streamlit-cookies-controller>=0.0.4
 requests>=2.31
+openpyxl>=3.1
