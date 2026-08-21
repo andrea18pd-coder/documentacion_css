@@ -12,6 +12,7 @@ from lib.ui import (
     consume_jump,
     val_or_dash,
     dataframe_to_markdown,
+    markdown_to_dataframe,
 )
 from lib.db import fetch_df, execute, execute_returning_id
 from lib.catalog import list_modules, list_plans, list_types, options
@@ -154,16 +155,41 @@ else:
                                 st.success("Nota actualizada.")
                                 st.rerun()
                     elif n["note_type"] == "Tabla":
-                        e_text = st.text_area(
-                            "Tabla (Markdown)", value=n["note_text"], key=f"edit_note_text_{n['id']}", height=150
+                        existing_df = markdown_to_dataframe(n["note_text"])
+                        if existing_df is None or existing_df.empty:
+                            existing_df = pd.DataFrame([{"Columna A": "", "Columna B": ""} for _ in range(3)])
+
+                        columns_key = f"edit_note_table_cols_{n['id']}"
+                        columns_input = st.text_input(
+                            "Columnas (separadas por coma)",
+                            value=st.session_state.get(columns_key, ", ".join(existing_df.columns)),
+                            key=columns_key,
                         )
-                        if st.button("Guardar cambios", key=f"save_note_{n['id']}"):
-                            execute(
-                                "update notes set note_text = :text where id = :id",
-                                {"text": e_text.strip(), "id": int(n["id"])},
+                        columns = [c.strip() for c in columns_input.split(",") if c.strip()]
+
+                        edited_df = None
+                        if not columns:
+                            st.warning("Define al menos una columna.")
+                        else:
+                            base_df = existing_df.reindex(columns=columns, fill_value="")
+                            edited_df = st.data_editor(
+                                base_df,
+                                num_rows="dynamic",
+                                use_container_width=True,
+                                key=f"edit_note_table_editor_{n['id']}_{len(columns)}_{columns_input}",
                             )
-                            st.success("Nota actualizada.")
-                            st.rerun()
+
+                        if st.button("Guardar cambios", key=f"save_note_{n['id']}"):
+                            md_table = dataframe_to_markdown(edited_df) if edited_df is not None else ""
+                            if not md_table:
+                                st.error("Completa al menos una fila con datos.")
+                            else:
+                                execute(
+                                    "update notes set note_text = :text where id = :id",
+                                    {"text": md_table, "id": int(n["id"])},
+                                )
+                                st.success("Nota actualizada.")
+                                st.rerun()
                     else:
                         e_type_options = ["Consideración", "Advertencia", "Limitación", "Tip"]
                         current_type = n["note_type"] if n["note_type"] in e_type_options else e_type_options[0]

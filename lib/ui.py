@@ -185,6 +185,23 @@ def dataframe_to_markdown(df):
     return "\n".join([header, separator] + rows)
 
 
+def markdown_to_dataframe(md_text):
+    """Convierte una tabla en Markdown (como la genera dataframe_to_markdown) a un DataFrame."""
+    lines = [l for l in (md_text or "").strip().split("\n") if l.strip()]
+    if len(lines) < 2:
+        return None
+    header = [c.strip() for c in lines[0].strip().strip("|").split("|")]
+    rows = []
+    for line in lines[2:]:
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < len(header):
+            cells += [""] * (len(header) - len(cells))
+        elif len(cells) > len(header):
+            cells = cells[: len(header)]
+        rows.append(cells)
+    return pd.DataFrame(rows, columns=header)
+
+
 def val_or_dash(value, dash="—"):
     """Formatea un valor para mostrar, convirtiendo None/NaN/vacío en un guion."""
     if value is None or (isinstance(value, float) and pd.isna(value)):
