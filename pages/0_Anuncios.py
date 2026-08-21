@@ -1,11 +1,14 @@
+from datetime import datetime, timezone
+
 import pandas as pd
 import streamlit as st
 
 from lib.auth import guard_page, can_edit, current_user
 from lib.ui import inject_css, page_header, top_bar, select_with_id, confirm_delete_button
-from lib.db import fetch_df, execute
+from lib.db import fetch_df, execute, execute_returning_id
 from lib.catalog import list_modules, options
 from lib import notifications
+from lib.integrations import notify_new_announcement
 
 inject_css()
 guard_page()
@@ -70,10 +73,11 @@ if can_edit():
             if not title.strip() or not description.strip():
                 st.error("El título y la descripción son obligatorios.")
             else:
-                execute(
+                new_id = execute_returning_id(
                     """
                     insert into process_notes (title, description, module_id, priority, created_by, updated_by)
                     values (:title, :description, :module_id, :priority, :uid, :uid)
+                    returning id
                     """,
                     {
                         "title": title.strip(),
@@ -82,6 +86,19 @@ if can_edit():
                         "priority": priority,
                         "uid": current_user()["id"],
                     },
+                )
+                notify_new_announcement(
+                    {
+                        "id": new_id,
+                        "title": title.strip(),
+                        "description": description.strip(),
+                        "priority": priority,
+                        "priority_label": PRIORITY_LABELS[priority],
+                        "module": dict(module_opts).get(module_id),
+                        "author": current_user()["name"],
+                        "author_email": current_user()["email"],
+                        "created_at": datetime.now(timezone.utc).isoformat(),
+                    }
                 )
                 st.success("Anuncio publicado. El resto del equipo lo verá como anuncio nuevo al entrar a la app.")
                 st.rerun()

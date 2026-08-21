@@ -39,7 +39,7 @@ Login propio con tres roles (`admin`, `editor`, `lector`) y sesión persistente:
    values ('tu_correo@empresa.com', 'Tu Nombre', '<hash pegado aquí>', 'admin', true);
    ```
 
-3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador).
+3. **Configurar la conexión a la base de datos.** Copia `.streamlit/secrets.toml.example` a `.streamlit/secrets.toml` y reemplaza la URL con la cadena de conexión real de tu proyecto Supabase (usa el *connection pooler*, puerto `6543`). Opcionalmente, agrega tu API key gratuita de [Google AI Studio](https://aistudio.google.com/apikey) en la sección `[gemini]` para que el Asistente redacte respuestas con IA (sin esto, sigue funcionando solo con el buscador). Opcionalmente, agrega la URL de un flujo de Power Automate en `[power_automate]` para que se envíe un correo o mensaje de Teams cada vez que se publica un anuncio (ver detalle abajo).
 
 4. **Instalar dependencias y correr la app:**
 
@@ -49,6 +49,18 @@ Login propio con tres roles (`admin`, `editor`, `lector`) y sesión persistente:
    ```
 
 5. Inicia sesión con el usuario admin creado en el paso 2, ve a **Administración** y crea al menos un **Módulo**, un **Plan** y un **Tipo** antes de cargar contenido en las demás páginas.
+
+## Notificar anuncios por correo/Teams con Power Automate
+
+La app no expone un API REST propio (Streamlit no lo permite), pero sí puede *llamar* a un flujo de Power Automate en el momento en que se publica un anuncio en la página **Anuncios**. Así el flujo actúa como el disparador y decide qué notificar:
+
+1. En [Power Automate](https://make.powerautomate.com/), crea un **flujo de nube instantáneo** con el disparador **"Cuando se recibe una solicitud HTTP"**.
+2. En el disparador, define el esquema JSON del cuerpo con estos campos (todos como `string`, excepto `id` que es `integer`): `id`, `title`, `description`, `priority`, `priority_label`, `module`, `author`, `author_email`, `created_at`.
+3. Agrega las acciones que quieras después del disparador: **Enviar un correo electrónico (V2)** y/o **Publicar un mensaje en un canal de Teams**, usando los campos anteriores en el cuerpo del mensaje.
+4. Guarda el flujo y copia la **URL HTTP POST** que Power Automate genera para el disparador.
+5. Pega esa URL en `anuncios_webhook_url`, dentro de la sección `[power_automate]` de tu `secrets.toml` (local y/o en Streamlit Cloud).
+
+Si no configuras esta URL, la publicación de anuncios sigue funcionando igual — simplemente no se dispara ninguna notificación externa. Si el flujo falla o no responde, el anuncio igual queda publicado en la app; solo se muestra una advertencia.
 
 ## Despliegue en Streamlit Community Cloud
 
