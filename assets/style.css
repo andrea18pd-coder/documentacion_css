@@ -116,17 +116,25 @@ hr {
    Alto FIJO y parejo entre sí (no min-height): si el contenido no cabe, se hace scroll
    dentro de la tarjeta en vez de estirarla y desalinear la fila. */
 [class*="st-key-q10-field-card-"] {
-  background-color: white;
-  border: 1px solid var(--q10-border);
-  border-radius: 14px;
-  padding: 0.9rem 1.1rem;
-  height: 112px;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  overflow-y: auto;
+  background-color: white !important;
+  border: 1px solid var(--q10-border) !important;
+  border-radius: 14px !important;
+  padding: 0.9rem 1.1rem !important;
+  height: 112px !important;
+  max-height: 112px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  overflow-y: auto !important;
   overflow-wrap: break-word;
+}
+/* El contenido real (stVerticalBlock) queda un nivel adentro del wrapper con el borde;
+   sin esto, ese hijo puede seguir creciendo a su tamaño natural e igual desborda la tarjeta. */
+[class*="st-key-q10-field-card-"] > div {
+  height: 100% !important;
+  max-height: 100% !important;
+  overflow-y: auto !important;
 }
 [class*="st-key-q10-field-card-"] .q10-field-label {
   color: var(--q10-text-secondary);
