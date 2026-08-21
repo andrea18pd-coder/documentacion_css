@@ -113,17 +113,19 @@ hr {
 }
 
 /* Tarjetas de campo (Descripción, Módulo, Tipo, Planes, etc.), estilo cards de q10.com.
-   Alto parejo entre sí sin importar cuánto texto tenga cada una (min-height + flex). */
+   Alto FIJO y parejo entre sí (no min-height): si el contenido no cabe, se hace scroll
+   dentro de la tarjeta en vez de estirarla y desalinear la fila. */
 [class*="st-key-q10-field-card-"] {
   background-color: white;
   border: 1px solid var(--q10-border);
   border-radius: 14px;
   padding: 0.9rem 1.1rem;
-  min-height: 112px;
+  height: 112px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-y: auto;
   overflow-wrap: break-word;
 }
 [class*="st-key-q10-field-card-"] .q10-field-label {
