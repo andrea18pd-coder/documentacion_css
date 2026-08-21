@@ -87,6 +87,7 @@ if can_edit():
                         "uid": current_user()["id"],
                     },
                 )
+                recipients_df = fetch_df("select email from users where active = true order by email", ttl=15)
                 notify_new_announcement(
                     {
                         "id": new_id,
@@ -94,6 +95,7 @@ if can_edit():
                         "description": description.strip(),
                         "priority": priority,
                         "priority_label": PRIORITY_LABELS[priority],
+                        "recipients": ";".join(recipients_df["email"].tolist()),
                         "module": dict(module_opts).get(module_id),
                         "author": current_user()["name"],
                         "author_email": current_user()["email"],

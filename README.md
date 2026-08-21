@@ -55,8 +55,8 @@ Login propio con tres roles (`admin`, `editor`, `lector`) y sesión persistente:
 La app no expone un API REST propio (Streamlit no lo permite), pero sí puede *llamar* a un flujo de Power Automate en el momento en que se publica un anuncio en la página **Anuncios**. Así el flujo actúa como el disparador y decide qué notificar:
 
 1. En [Power Automate](https://make.powerautomate.com/), crea un **flujo de nube instantáneo** con el disparador **"Cuando se recibe una solicitud HTTP"**.
-2. En el disparador, define el esquema JSON del cuerpo con estos campos (todos como `string`, excepto `id` que es `integer`): `id`, `title`, `description`, `priority`, `priority_label`, `module`, `author`, `author_email`, `created_at`.
-3. Agrega las acciones que quieras después del disparador: **Enviar un correo electrónico (V2)** y/o **Publicar un mensaje en un canal de Teams**, usando los campos anteriores en el cuerpo del mensaje.
+2. En el disparador, define el esquema JSON del cuerpo con estos campos (todos como `string`, excepto `id` que es `integer`): `id`, `title`, `description`, `priority`, `priority_label`, `recipients`, `module`, `author`, `author_email`, `created_at`. `recipients` trae los correos de todos los usuarios activos de la app, separados por `;` — úsalo directamente como destinatario en vez de una dirección fija, así no hay que mantener una lista aparte en Microsoft 365.
+3. Agrega las acciones que quieras después del disparador: **Enviar un correo electrónico (V2)** (destinatario = campo dinámico `recipients`) y/o **Publicar un mensaje en un canal de Teams**, usando los campos anteriores en el cuerpo del mensaje.
 4. Guarda el flujo y copia la **URL HTTP POST** que Power Automate genera para el disparador.
 5. Pega esa URL en `anuncios_webhook_url`, dentro de la sección `[power_automate]` de tu `secrets.toml` (local y/o en Streamlit Cloud).
 
