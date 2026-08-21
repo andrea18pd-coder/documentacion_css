@@ -131,6 +131,66 @@ else:
                     unsafe_allow_html=True,
                 )
 
+            if can_edit():
+                with st.expander(f"✏️ Editar / eliminar esta nota ({n['note_type'] or 'Nota'})"):
+                    if n["note_type"] == "Query":
+                        queries_df = fetch_df("select id, name from queries order by name", ttl=15)
+                        if queries_df.empty:
+                            st.warning("No hay queries registrados.")
+                        else:
+                            query_opts_edit = [(int(r.id), r["name"]) for _, r in queries_df.iterrows()]
+                            e_query_id = select_with_id(
+                                "Query",
+                                query_opts_edit,
+                                current_id=int(n["query_id"]) if pd.notna(n["query_id"]) else None,
+                                key=f"edit_note_query_{n['id']}",
+                            )
+                            if st.button("Guardar cambios", key=f"save_note_{n['id']}"):
+                                e_name = queries_df.set_index("id").loc[e_query_id, "name"]
+                                execute(
+                                    "update notes set query_id = :qid, note_text = :text where id = :id",
+                                    {"qid": e_query_id, "text": e_name, "id": int(n["id"])},
+                                )
+                                st.success("Nota actualizada.")
+                                st.rerun()
+                    elif n["note_type"] == "Tabla":
+                        e_text = st.text_area(
+                            "Tabla (Markdown)", value=n["note_text"], key=f"edit_note_text_{n['id']}", height=150
+                        )
+                        if st.button("Guardar cambios", key=f"save_note_{n['id']}"):
+                            execute(
+                                "update notes set note_text = :text where id = :id",
+                                {"text": e_text.strip(), "id": int(n["id"])},
+                            )
+                            st.success("Nota actualizada.")
+                            st.rerun()
+                    else:
+                        e_type_options = ["Consideración", "Advertencia", "Limitación", "Tip"]
+                        current_type = n["note_type"] if n["note_type"] in e_type_options else e_type_options[0]
+                        e_note_type = st.selectbox(
+                            "Tipo de nota",
+                            e_type_options,
+                            index=e_type_options.index(current_type),
+                            key=f"edit_note_type_{n['id']}",
+                        )
+                        e_text = st.text_area("Nota", value=n["note_text"], key=f"edit_note_text_{n['id']}")
+                        if st.button("Guardar cambios", key=f"save_note_{n['id']}"):
+                            if not e_text.strip():
+                                st.error("El texto de la nota es obligatorio.")
+                            else:
+                                execute(
+                                    "update notes set note_text = :text, note_type = :type where id = :id",
+                                    {"text": e_text.strip(), "type": e_note_type, "id": int(n["id"])},
+                                )
+                                st.success("Nota actualizada.")
+                                st.rerun()
+
+                    if confirm_delete_button("🗑️ Eliminar nota", f"del_note_{n['id']}"):
+                        execute("delete from notes where id = :id", {"id": int(n["id"])})
+                        st.session_state[f"del_note_{n['id']}"] = False
+                        st.success("Nota eliminada.")
+                        st.rerun()
+
     if can_edit():
         with st.expander("➕ Agregar nota"):
             note_type = st.selectbox(
