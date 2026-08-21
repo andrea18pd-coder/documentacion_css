@@ -98,7 +98,7 @@ else:
     with col_plans:
         field_card("Planes", plans_value, key=f"q10-field-card-planes-{selected_id}")
 
-    st.markdown("**Parámetros / pasos de activación**")
+    st.markdown("**Pasos de activación**")
     activation_notes = row["activation_notes"]
     if pd.notna(activation_notes) and str(activation_notes).strip():
         st.markdown(activation_notes)
@@ -326,7 +326,7 @@ else:
                 e_name = st.text_input("Nombre", value=row["name"])
                 e_description = st.text_area("Descripción", value=row["description"] or "")
                 e_request_type = st.text_input("Tipo de petición", value=row["request_type"] or "")
-                e_activation_notes = st.text_area("Parámetros / pasos de activación", value=row["activation_notes"] or "")
+                e_activation_notes = st.text_area("Pasos de activación", value=row["activation_notes"] or "")
                 e_module_id = select_with_id(
                     "Módulo", module_opts, current_id=row["module_id"], allow_none=True, key=f"edit_module_{selected_id}"
                 )
@@ -391,7 +391,7 @@ if can_edit():
             name = st.text_input("Nombre")
             description = st.text_area("Descripción")
             request_type = st.text_input("Tipo de petición que la requiere")
-            activation_notes = st.text_area("Parámetros / pasos de activación")
+            activation_notes = st.text_area("Pasos de activación")
             module_id = select_with_id("Módulo", module_opts, allow_none=True, key="new_func_module")
             type_id = select_with_id("Tipo", type_opts, allow_none=True, key="new_func_type")
             plan_ids = multiselect_with_id("Planes en los que aplica", plan_opts, key="new_func_plans")
