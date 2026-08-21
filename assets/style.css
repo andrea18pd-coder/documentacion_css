@@ -112,6 +112,27 @@ hr {
   border-color: var(--q10-border);
 }
 
+/* Tarjetas de campo (Descripción, Módulo, Tipo, Planes, etc.), estilo cards de q10.com */
+[class*="st-key-q10-field-card-"] {
+  background-color: white;
+  border: 1px solid var(--q10-border);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+}
+[class*="st-key-q10-field-card-"] .q10-field-label {
+  color: var(--q10-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.3rem;
+}
+[class*="st-key-q10-field-card-"] .q10-field-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--q10-dark);
+}
+
 a, a:visited {
   color: var(--q10-orange);
 }

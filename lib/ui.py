@@ -1,5 +1,6 @@
 """Componentes de interfaz reutilizables: estilo Q10, header, selects e inputs comunes."""
 
+import re
 from pathlib import Path
 
 import pandas as pd
@@ -209,6 +210,23 @@ def val_or_dash(value, dash="—"):
     if isinstance(value, str) and not value.strip():
         return dash
     return value
+
+
+def field_card(label, value, key):
+    """Tarjeta pequeña con una etiqueta y un valor, para mostrar campos en fila (estilo Q10)."""
+    with st.container(border=True, key=key):
+        st.markdown(
+            f'<div class="q10-field-label">{label}</div><div class="q10-field-value">{value}</div>',
+            unsafe_allow_html=True,
+        )
+
+
+def extract_activation_codes(text):
+    """Extrae los códigos numéricos (uno por línea, ej. '894: Inicio - ...') de un texto de
+    parámetros/pasos de activación, listos para copiar y pegar en la habilitación en BD."""
+    if not text or (isinstance(text, float) and pd.isna(text)):
+        return []
+    return re.findall(r"(?m)^\s*[-*]?\s*(\d+)\s*:", str(text))
 
 
 def confirm_delete_button(label, state_key):

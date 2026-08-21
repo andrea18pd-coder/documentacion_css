@@ -13,6 +13,8 @@ from lib.ui import (
     val_or_dash,
     dataframe_to_markdown,
     markdown_to_dataframe,
+    field_card,
+    extract_activation_codes,
 )
 from lib.db import fetch_df, execute, execute_returning_id
 from lib.catalog import list_modules, list_plans, list_types, options
@@ -75,23 +77,37 @@ else:
     )
     row = df.set_index("id").loc[selected_id]
 
-    st.markdown(f"**Descripción:** {val_or_dash(row['description'])}")
-    st.markdown(f"**Módulo:** {val_or_dash(row['module_name'])} &nbsp;&nbsp; **Tipo:** {val_or_dash(row['type_name'])}")
-    st.markdown(f"**Tipo de petición que la requiere:** {val_or_dash(row['request_type'])}")
-
-    st.markdown("**Parámetros / pasos de activación**")
-    activation_notes = row["activation_notes"]
-    if activation_notes and str(activation_notes).strip():
-        st.markdown(activation_notes)
-    else:
-        st.caption("—")
-
     item_plans_df = fetch_df(
         "select p.id, p.name from functionality_plans fp join plans p on p.id = fp.plan_id where fp.functionality_id = :id order by p.name",
         {"id": int(selected_id)},
         ttl=15,
     )
-    st.markdown("**Planes:** " + (", ".join(item_plans_df["name"]) if not item_plans_df.empty else "—"))
+    plans_value = ", ".join(item_plans_df["name"]) if not item_plans_df.empty else "—"
+
+    col_desc, col_module, col_type, col_request, col_plans = st.columns([2, 1, 1, 1, 1])
+    with col_desc:
+        field_card("Descripción", val_or_dash(row["description"]), key=f"q10-field-card-desc-{selected_id}")
+    with col_module:
+        field_card("Módulo", val_or_dash(row["module_name"]), key=f"q10-field-card-modulo-{selected_id}")
+    with col_type:
+        field_card("Tipo", val_or_dash(row["type_name"]), key=f"q10-field-card-tipo-{selected_id}")
+    with col_request:
+        field_card(
+            "Tipo de petición", val_or_dash(row["request_type"]), key=f"q10-field-card-peticion-{selected_id}"
+        )
+    with col_plans:
+        field_card("Planes", plans_value, key=f"q10-field-card-planes-{selected_id}")
+
+    st.markdown("**Parámetros / pasos de activación**")
+    activation_notes = row["activation_notes"]
+    if pd.notna(activation_notes) and str(activation_notes).strip():
+        st.markdown(activation_notes)
+        codes = extract_activation_codes(activation_notes)
+        if codes:
+            st.caption("Códigos listos para copiar y pegar (habilitación en BD):")
+            st.code(",".join(codes), language=None)
+    else:
+        st.caption("—")
 
     st.markdown("#### Consideraciones y notas")
     notes_df = fetch_df(
