@@ -112,12 +112,19 @@ hr {
   border-color: var(--q10-border);
 }
 
-/* Tarjetas de campo (Descripción, Módulo, Tipo, Planes, etc.), estilo cards de q10.com */
+/* Tarjetas de campo (Descripción, Módulo, Tipo, Planes, etc.), estilo cards de q10.com.
+   Alto parejo entre sí sin importar cuánto texto tenga cada una (min-height + flex). */
 [class*="st-key-q10-field-card-"] {
   background-color: white;
   border: 1px solid var(--q10-border);
   border-radius: 14px;
   padding: 0.9rem 1.1rem;
+  min-height: 112px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-wrap: break-word;
 }
 [class*="st-key-q10-field-card-"] .q10-field-label {
   color: var(--q10-text-secondary);
