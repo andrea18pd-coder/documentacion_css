@@ -121,7 +121,7 @@ hr {
   border: 1px solid var(--q10-border);
   border-radius: 14px;
   padding: 0.9rem 1.1rem;
-  height: 400px;
+  height: 200px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -140,7 +140,7 @@ hr {
 }
 .q10-field-card .q10-field-value {
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 400;
   color: var(--q10-dark);
 }
 
