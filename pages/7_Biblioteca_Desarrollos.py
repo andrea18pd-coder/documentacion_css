@@ -62,7 +62,7 @@ if section == "Biblioteca de desarrollos":
 
     df = fetch_df(
         f"""
-        select id, external_id, name, description_html, kind
+        select id, name, description_html, kind
         from custom_development_articles
         {where_sql}
         order by name
@@ -82,10 +82,7 @@ if section == "Biblioteca de desarrollos":
         )
         row = df.set_index("id").loc[selected_id]
 
-        st.markdown(
-            f"**Tipo:** {KIND_ICONS.get(row['kind'], '')} {row['kind']} &nbsp;&nbsp; "
-            f"**Código original:** {val_or_dash(row['external_id'])}"
-        )
+        st.markdown(f"**Tipo:** {KIND_ICONS.get(row['kind'], '')} {row['kind']}")
         st.markdown(row["description_html"], unsafe_allow_html=True)
 
         if can_edit():
@@ -127,7 +124,7 @@ if section == "Biblioteca de desarrollos":
 
     with st.expander("📋 Ver tabla completa"):
         full_df = fetch_df(
-            "select name, kind, external_id from custom_development_articles order by name", ttl=15
+            "select name, kind from custom_development_articles order by name", ttl=15
         )
         st.dataframe(full_df, use_container_width=True, hide_index=True)
 
