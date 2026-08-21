@@ -1,7 +1,16 @@
 import streamlit as st
 
 from lib.auth import guard_page, can_edit, current_user
-from lib.ui import inject_css, page_header, top_bar, select_with_id, confirm_delete_button, consume_jump, val_or_dash
+from lib.ui import (
+    inject_css,
+    page_header,
+    top_bar,
+    select_with_id,
+    confirm_delete_button,
+    consume_jump,
+    val_or_dash,
+    field_card,
+)
 from lib.db import fetch_df, execute
 from lib.catalog import list_modules, options
 
@@ -34,10 +43,17 @@ else:
     )
     row = df.set_index("id").loc[selected_id]
 
-    st.markdown(f"**Módulo:** {val_or_dash(row['module_name'])}")
-    st.markdown(f"**Descripción:** {val_or_dash(row['description'])}")
-    st.markdown(f"**Tipo de dato:** {val_or_dash(row['data_type'])}")
-    st.markdown(f"**Valores de ejemplo:** {val_or_dash(row['example_values'])}")
+    col_module, col_desc, col_type, col_examples = st.columns([1, 2, 1, 2])
+    with col_module:
+        field_card("Módulo", val_or_dash(row["module_name"]), key=f"q10-field-card-dim-modulo-{selected_id}")
+    with col_desc:
+        field_card("Descripción", val_or_dash(row["description"]), key=f"q10-field-card-dim-desc-{selected_id}")
+    with col_type:
+        field_card("Tipo de dato", val_or_dash(row["data_type"]), key=f"q10-field-card-dim-tipo-{selected_id}")
+    with col_examples:
+        field_card(
+            "Valores de ejemplo", val_or_dash(row["example_values"]), key=f"q10-field-card-dim-ejemplos-{selected_id}"
+        )
 
     if can_edit():
         with st.expander("✏️ Editar / eliminar esta dimensión"):
