@@ -1,5 +1,6 @@
 """Componentes de interfaz reutilizables: estilo Q10, header, selects e inputs comunes."""
 
+import html
 import re
 from pathlib import Path
 
@@ -212,13 +213,19 @@ def val_or_dash(value, dash="—"):
     return value
 
 
-def field_card(label, value, key):
-    """Tarjeta pequeña con una etiqueta y un valor, para mostrar campos en fila (estilo Q10)."""
-    with st.container(border=True, key=key):
-        st.markdown(
-            f'<div class="q10-field-label">{label}</div><div class="q10-field-value">{value}</div>',
-            unsafe_allow_html=True,
-        )
+def field_card(label, value, key=None):
+    """Tarjeta pequeña con una etiqueta y un valor, para mostrar campos en fila (estilo Q10).
+
+    Se dibuja como HTML plano (no st.container) a propósito: el contenedor con borde de
+    Streamlit trae su propio layout flex interno que gana el pulso al CSS incluso con
+    !important, así que un alto fijo parejo entre tarjetas no se puede forzar ahí. Con un
+    div propio no hay nada que pelear.
+    """
+    st.markdown(
+        f'<div class="q10-field-card"><div class="q10-field-label">{html.escape(str(label))}</div>'
+        f'<div class="q10-field-value">{html.escape(str(value))}</div></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def extract_activation_codes(text):

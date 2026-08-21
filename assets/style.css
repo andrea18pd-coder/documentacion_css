@@ -113,30 +113,24 @@ hr {
 }
 
 /* Tarjetas de campo (Descripción, Módulo, Tipo, Planes, etc.), estilo cards de q10.com.
-   Alto FIJO y parejo entre sí (no min-height): si el contenido no cabe, se hace scroll
-   dentro de la tarjeta en vez de estirarla y desalinear la fila. */
-[class*="st-key-q10-field-card-"] {
-  background-color: white !important;
-  border: 1px solid var(--q10-border) !important;
-  border-radius: 14px !important;
-  padding: 0.9rem 1.1rem !important;
-  height: 170px !important;
-  max-height: 170px !important;
-  box-sizing: border-box !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: flex-start !important;
-  overflow-y: auto !important;
+   Se dibujan como un div propio (no st.container), así que no hay layout interno de
+   Streamlit con el que pelear: el alto fijo aplica siempre. Si el contenido no cabe, se
+   hace scroll dentro de la tarjeta en vez de estirarla y desalinear la fila. */
+.q10-field-card {
+  background-color: white;
+  border: 1px solid var(--q10-border);
+  border-radius: 14px;
+  padding: 0.9rem 1.1rem;
+  height: 400px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow-y: auto;
   overflow-wrap: break-word;
+  margin-bottom: 1rem;
 }
-/* El contenido real (stVerticalBlock) queda un nivel adentro del wrapper con el borde;
-   sin esto, ese hijo puede seguir creciendo a su tamaño natural e igual desborda la tarjeta. */
-[class*="st-key-q10-field-card-"] > div {
-  height: 100% !important;
-  max-height: 100% !important;
-  overflow-y: auto !important;
-}
-[class*="st-key-q10-field-card-"] .q10-field-label {
+.q10-field-card .q10-field-label {
   color: var(--q10-text-secondary);
   font-size: 0.75rem;
   font-weight: 600;
@@ -144,7 +138,7 @@ hr {
   letter-spacing: 0.03em;
   margin-bottom: 0.3rem;
 }
-[class*="st-key-q10-field-card-"] .q10-field-value {
+.q10-field-card .q10-field-value {
   font-size: 0.95rem;
   font-weight: 600;
   color: var(--q10-dark);
