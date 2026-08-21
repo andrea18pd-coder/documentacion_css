@@ -125,7 +125,14 @@ def login_form():
             max_age=SESSION_TTL_DAYS * 86400,
             same_site="lax",
         )
-        st.rerun()
+        # Sin st.rerun() a propósito: el controlador de cookies vive en un iframe y necesita
+        # un instante para que el mensaje de "set cookie" llegue al navegador. Un rerun
+        # inmediato aquí interrumpe esa llamada antes de que se alcance a escribir la cookie
+        # de verdad — la sesión "funciona" en esta pestaña (queda en session_state) pero
+        # nunca sobrevive a un refresh, porque la cookie nunca se guardó. Dejamos que el
+        # script actual siga su curso normal: como session_state.user ya quedó asignado,
+        # el resto de app.py (más abajo) renderiza la navegación normalmente sin necesitar
+        # un rerun aparte.
     else:
         st.error("Contraseña incorrecta.")
 

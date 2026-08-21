@@ -13,7 +13,11 @@ if not is_logged_in():
     page_header("Documentación CSS", "Consulta y gestión de la documentación del área")
     st.markdown("### Iniciar sesión")
     login_form()
-    st.stop()
+    # Sin rerun explícito en login_form(): si el login tuvo éxito en esta misma corrida,
+    # is_logged_in() ya es True aquí y seguimos de largo hacia la navegación normal, sin
+    # cortar con st.stop(). Solo se corta si el login todavía no ha ocurrido/fallado.
+    if not is_logged_in():
+        st.stop()
 
 pages = [
     st.Page("pages/0_Anuncios.py", title="Anuncios", icon="📢"),
